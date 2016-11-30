@@ -107,6 +107,8 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ApiCall.cs" />
+    <Compile Include="ApiSequenceExtractor.cs" />
     <Compile Include="ProgramDownloadFromGit.cs" />
     <Compile Include="ProgramParseSolution.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
