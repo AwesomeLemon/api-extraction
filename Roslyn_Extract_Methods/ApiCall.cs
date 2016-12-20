@@ -11,6 +11,7 @@
         }
 
         public static ApiCall OfMethodInvocation(string className, string methodName) {
+            if (className == "") return new ApiCall(methodName);
             return new ApiCall(className + "." + methodName);
         }
         public static ApiCall OfConstructor(string className) {

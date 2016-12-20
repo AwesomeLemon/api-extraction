@@ -6,11 +6,11 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Roslyn_Extract_Methods {
     internal class ApiSequenceExtractor : CSharpSyntaxWalker {
-        private string _lastCalledMethod;
         private readonly SemanticModel _model;
+        private string _lastCalledMethod;
 
         public ApiSequenceExtractor(SemanticModel model) {
-            this._model = model;
+            _model = model;
         }
 
         public List<ApiCall> Calls { get; } = new List<ApiCall>();
@@ -21,14 +21,17 @@ namespace Roslyn_Extract_Methods {
         public override void VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
             try {
                 var ctorSymbol = _model.GetTypeInfo(node).Type;
-                foreach (var argumentSyntax in node.ArgumentList?.Arguments ?? new SeparatedSyntaxList<ArgumentSyntax>()) {
-                    argumentSyntax.Accept(this);
+                if (node.ArgumentList != null) {
+                    foreach (var argumentSyntax in node.ArgumentList.Arguments) {
+                        argumentSyntax.Accept(this);
+                    }
                 }
                 Calls.Add(ApiCall.OfConstructor(ctorSymbol.Name));
             }
             catch (Exception e) {
                 Console.WriteLine(e.Message);
-                Console.ReadLine();
+             //   node.Accept(this);
+          //      Console.ReadLine();
             }
         }
 
@@ -36,8 +39,15 @@ namespace Roslyn_Extract_Methods {
             foreach (var argumentSyntax in node.ArgumentList.Arguments) {
                 argumentSyntax.Accept(this);
             }
-            node.Expression.Accept(this);
-            updateLastCalledMethod(_model.GetSymbolInfo(node).Symbol);
+            if (node.Expression is IdentifierNameSyntax) {
+                var methodName = (IdentifierNameSyntax) node.Expression;
+                var method = _model.GetSymbolInfo(methodName).Symbol;
+                if (method == null || method.Name.StartsWith("_")) return;
+                Calls.Add(ApiCall.OfMethodInvocation(method.ContainingType.Name, method.Name));
+                UpdateLastCalledMethod(method);
+            }
+            else node.Expression.Accept(this);
+            UpdateLastCalledMethod(_model.GetSymbolInfo(node).Symbol);
         }
 
         public override void VisitIfStatement(IfStatementSyntax node) {
@@ -51,102 +61,155 @@ namespace Roslyn_Extract_Methods {
             node.Statement.Accept(this);
         }
 
-        private void updateLastCalledMethod(ISymbol method) {
-            if (method is IMethodSymbol) {
-                _lastCalledMethod = ((IMethodSymbol)method).ReturnType.Name;
-            } else {
-                if (method is IPropertySymbol) {
-                    _lastCalledMethod = ((IPropertySymbol)method).Type.Name;
-                } else {
-                    if (method is IFieldSymbol) {
-                        _lastCalledMethod = ((IFieldSymbol) method).Type.Name;
-                    }
-                    else {
-                        if (method is IEventSymbol) {
-                            _lastCalledMethod = ((IEventSymbol) method).Type.Name;
-                        }
-                        else throw new NotImplementedException("Function called is nor method, nor property, but something unaccounted for.");
-                    }
-                        
-                }
+        private void UpdateLastCalledMethod(ISymbol method) {
+            if (method == null) {
+                _lastCalledMethod = null;
+                return;
             }
+            if (method is IMethodSymbol) {
+                _lastCalledMethod = ((IMethodSymbol) method).ReturnType.Name;
+                return;
+            }
+            if (method is IPropertySymbol) {
+                _lastCalledMethod = ((IPropertySymbol) method).Type.Name;
+                return;
+            }
+            if (method is IFieldSymbol) {
+                _lastCalledMethod = ((IFieldSymbol) method).Type.Name;
+                return;
+            }
+            if (method is IEventSymbol) {
+                _lastCalledMethod = ((IEventSymbol) method).Type.Name;
+                return;
+            }
+            if (method is IParameterSymbol) {
+                _lastCalledMethod = ((IParameterSymbol) method).Type.Name;
+                return;
+            }
+            if (method is ILocalSymbol) {
+                _lastCalledMethod = ((ILocalSymbol) method).Type.Name;
+                return;
+            }
+            throw new NotImplementedException("Function called is something unaccounted for.");
         }
 
         public override void VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {
+            var method = _model.GetSymbolInfo(node.Name).Symbol;
+            if (method == null) return;
+            //TODO: I don't know if there'a any PROPER way to differentiate between parameterless method call and property access.
+            if (method.Name.StartsWith("_")) return;
+
             if (node.Expression is IdentifierNameSyntax) {
                 // The target is a simple identifier, the code being analysed is of the form
                 // "command.ExecuteReader()" and memberAccess.Expression is the "command"
                 // node
                 var variable = (IdentifierNameSyntax) node.Expression;
                 var variableType = _model.GetTypeInfo(variable).Type.Name;
-                var method = _model.GetSymbolInfo(node.Name).Symbol;
-                if (method == null) throw new ArgumentNullException(nameof(method));
+                
+                if (variableType == null) return; //throw new ArgumentNullException(nameof(method));
                 Calls.Add(ApiCall.OfMethodInvocation(variableType, method.Name));
-                updateLastCalledMethod(method);
+                UpdateLastCalledMethod(method);
                 return;
             }
             if (node.Expression is InvocationExpressionSyntax) {
-                var invocSyntax = (InvocationExpressionSyntax) node.Expression;
-                var method = _model.GetSymbolInfo(node.Name).Symbol;
-                invocSyntax.Accept(this);
-                //TODO: DANGER! I assume that the true last called method is stored
-                if (_lastCalledMethod == null) {
-                    Console.WriteLine("Mistake!");
-                }
-                Calls.Add(ApiCall.OfMethodInvocation(_lastCalledMethod, method.Name));
-                updateLastCalledMethod(method);
                 // The target is another invocation, the code being analysed is of the form
                 // "GetCommand().ExecuteReader()" and memberAccess.Expression is the
                 // "GetCommand()" node
+                var invocationSyntax = (InvocationExpressionSyntax) node.Expression;
+                invocationSyntax.Accept(this);
+                //TODO: DANGER! I assume that the true last called method is stored
+                if (_lastCalledMethod == null) return;
+                Calls.Add(ApiCall.OfMethodInvocation(_lastCalledMethod, method.Name));
+                UpdateLastCalledMethod(method);
                 return;
             }
             if (node.Expression is LiteralExpressionSyntax) {
-                var litSyntax = (LiteralExpressionSyntax)node.Expression;
-                var litType = _model.GetTypeInfo(litSyntax).Type;
-                var method = _model.GetSymbolInfo(node.Name).Symbol;
-                Calls.Add(ApiCall.OfMethodInvocation(litType.Name, method.Name));
-                updateLastCalledMethod(method);
+                var literalSyntax = (LiteralExpressionSyntax) node.Expression;
+                var literalType = _model.GetTypeInfo(literalSyntax).Type;
+                
+                if (literalType == null) return;
+                Calls.Add(ApiCall.OfMethodInvocation(literalType.Name, method.Name));
+                UpdateLastCalledMethod(method);
                 return;
             }
             if (node.Expression is PredefinedTypeSyntax) {
                 var typeSyntax = (PredefinedTypeSyntax) node.Expression;
                 var typeName = _model.GetTypeInfo(typeSyntax).Type.Name;
-                var method = _model.GetSymbolInfo(node.Name).Symbol;
                 Calls.Add(ApiCall.OfMethodInvocation(typeName, method.Name));
-                updateLastCalledMethod(method);
+                UpdateLastCalledMethod(method);
                 return;
             }
             if (node.Expression is MemberAccessExpressionSyntax) {
-                Console.WriteLine("NOT IMPLEMENTED");
-//                var memberSyntax = (MemberAccessExpressionSyntax) node.Expression;
-//                var type = model.GetTypeInfo(memberSyntax.Expression).Type;
-//                var method = model.GetSymbolInfo(node.Name).Symbol;
-//                Calls.Add(ApiCall.ofMethodInvocation(type.Name, method.Name));
-//                updateLastCalledMethod(method);
-
-                // The target is a member access, the code being analysed is of the form
-                // "x.Command.ExecuteReader()" and memberAccess.Expression is the "x.Command"
-                // node
+                var memberSyntax = (MemberAccessExpressionSyntax) node.Expression;
+                var tryType = _model.GetTypeInfo(memberSyntax);
+                string type;
+                if (tryType.Equals(null)) {
+                    memberSyntax.Accept(this);
+                    type = _lastCalledMethod;
+                }
+                else type = tryType.Type.Name;
+                
+                Calls.Add(ApiCall.OfMethodInvocation(type, method.Name));
+                UpdateLastCalledMethod(method);
                 return;
             }
             if (node.Expression is ObjectCreationExpressionSyntax) {
                 var objSyntax = (ObjectCreationExpressionSyntax) node.Expression;
                 var type = _model.GetTypeInfo(objSyntax).Type;
+                if (type == null) return;
                 Calls.Add(ApiCall.OfConstructor(type.Name));
                 if (node.Name != null) {
-                    var method = _model.GetSymbolInfo(node.Name).Symbol;
                     Calls.Add(ApiCall.OfMethodInvocation(type.Name, method.Name));
                 }
                 objSyntax.ArgumentList?.Accept(this);
                 objSyntax.Initializer?.Accept(this);
+                UpdateLastCalledMethod(method);
                 return;
             }
             if (node.Expression is InstanceExpressionSyntax) {
                 var instSyntax = (InstanceExpressionSyntax) node.Expression;
                 var type = _model.GetTypeInfo(instSyntax).Type;
-                var method = _model.GetSymbolInfo(node.Name).Symbol;
+                
+                if (type == null) return;
                 Calls.Add(ApiCall.OfMethodInvocation(type.Name, method.Name));
-                updateLastCalledMethod(method);
+                UpdateLastCalledMethod(method);
+                return;
+            }
+            if (node.Expression is ParenthesizedExpressionSyntax) {
+                var parenSyntax = (ParenthesizedExpressionSyntax) node.Expression;
+                parenSyntax.Expression.Accept(this);
+                //TODO: danger with last called method
+                var type = _lastCalledMethod;
+                
+                Calls.Add(ApiCall.OfMethodInvocation(type, method.Name));
+                UpdateLastCalledMethod(method);
+                return;
+            }
+            if (node.Expression is TypeOfExpressionSyntax) {
+                var typeofSyntax = (TypeOfExpressionSyntax) node.Expression;
+                var type = _model.GetTypeInfo(typeofSyntax.Type).Type;
+                
+                if (type == null) return;
+                Calls.Add(ApiCall.OfMethodInvocation(type.Name, method.Name));
+                UpdateLastCalledMethod(method);
+                return;
+            }
+//            if (node.Expression is ElementAccessExpressionSyntax) {
+//                var accessSyntax = (ElementAccessExpressionSyntax)node.Expression;
+//                var type = _model.GetTypeInfo(accessSyntax.).Type;
+//                var method = _model.GetSymbolInfo(node.Name).Symbol;
+//                Calls.Add(ApiCall.OfMethodInvocation(type.Name, method.Name));
+//                updateLastCalledMethod(method);
+//                return;
+//            }
+            if (node.Expression is ElementAccessExpressionSyntax) return;//not interested.
+            if (node.Expression is GenericNameSyntax) {
+                var genericSyntax = (GenericNameSyntax)node.Expression;
+                var type = _model.GetTypeInfo(genericSyntax).Type;
+                
+                if (type == null) return;
+                Calls.Add(ApiCall.OfMethodInvocation(type.Name, method.Name));
+                UpdateLastCalledMethod(method);
                 return;
             }
             Console.WriteLine("Missed something!");
