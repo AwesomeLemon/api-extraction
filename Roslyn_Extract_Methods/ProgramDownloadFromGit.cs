@@ -10,12 +10,12 @@ using Repository = LibGit2Sharp.Repository;
 
 namespace Roslyn_Extract_Methods {
     internal class ProgramDownloadFromGit {
-        private static readonly string fileName = "reps.txt";
-        private static readonly string fileRefactoredName = "reps_refactored.txt";
+        private static readonly string fileName = "reps_new.txt";
+        private static readonly string fileRefactoredName = "reps_new_refactored.txt";
         private static readonly string _pathForCloning = @"D:\DeepApiReps\";
         private static readonly GitHubClient client = new GitHubClient(new ProductHeaderValue("deep-api#"));
-        private static readonly string username = "***"; //Must be valid!
-        private static readonly string password = "***"; //Must be valid!
+        private static readonly string username = "AwesomeLemon"; //Must be valid!
+        private static readonly string password = "patternGITHUB0"; //Must be valid!
         private static readonly WebClient Wc;
 
         static ProgramDownloadFromGit() {
@@ -33,9 +33,15 @@ namespace Roslyn_Extract_Methods {
         public static void FileRepsAndSaveUrls() {
             var request = new SearchRepositoriesRequest {
                 Language = Language.CSharp,
-                Stars = Range.GreaterThan(500)
+                Stars = Range.GreaterThan(100)
+            };
+            var options = new ApiOptions() {
+                PageCount = 3,
+                StartPage = 1,
+                PageSize = 50
             };
             var result = client.Search.SearchRepo(request).Result;
+            Console.WriteLine(result.IncompleteResults);
             using (var writer = new StreamWriter(fileName)) {
                 writer.WriteLine();
                 foreach (var repository in result.Items) {
