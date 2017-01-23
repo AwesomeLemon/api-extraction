@@ -76,6 +76,10 @@ namespace Roslyn_Extract_Methods {
             }
         }
 
+        private static void CleanUpTagTest() {
+            var res = MethodsCollector.CleanUpTags("adsf, <see cref=\"abs\" > adslkfj <other \"\"  > <see cref=\"12\">");
+        }
+
         private static void Main(string[] args) {
             var solutionPathSeasons = @"D:\Users\Alexander\Documents\GitHub\DesktopSeasons\DesktopSeasons.sln"; //
             var forRoslynTest =
