@@ -67,30 +67,37 @@ namespace Roslyn_Extract_Methods {
                 return;
             }
             if (method is IMethodSymbol) {
-                _lastCalledMethod = ((IMethodSymbol) method).ReturnType.Name;
+                _lastCalledMethod = GetProperTypeName(((IMethodSymbol) method).ReturnType);
                 return;
             }
             if (method is IPropertySymbol) {
-                _lastCalledMethod = ((IPropertySymbol) method).Type.Name;
+                _lastCalledMethod = GetProperTypeName(((IPropertySymbol) method).Type);
                 return;
             }
             if (method is IFieldSymbol) {
-                _lastCalledMethod = ((IFieldSymbol) method).Type.Name;
+                _lastCalledMethod = GetProperTypeName(((IFieldSymbol) method).Type);
                 return;
             }
             if (method is IEventSymbol) {
-                _lastCalledMethod = ((IEventSymbol) method).Type.Name;
+                _lastCalledMethod = GetProperTypeName(((IEventSymbol) method).Type);
                 return;
             }
             if (method is IParameterSymbol) {
-                _lastCalledMethod = ((IParameterSymbol) method).Type.Name;
+                _lastCalledMethod = GetProperTypeName(((IParameterSymbol) method).Type);
                 return;
             }
             if (method is ILocalSymbol) {
-                _lastCalledMethod = ((ILocalSymbol) method).Type.Name;
+                _lastCalledMethod = GetProperTypeName(((ILocalSymbol) method).Type);
                 return;
             }
             throw new NotImplementedException("Function called is something unaccounted for.");
+        }
+
+        private string GetProperTypeName(ISymbol type) {
+            var symbolDisplayFormat = new SymbolDisplayFormat(
+                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
+            
+            return type.ToDisplayString(symbolDisplayFormat);
         }
 
         public override void VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {
@@ -104,9 +111,10 @@ namespace Roslyn_Extract_Methods {
                 // "command.ExecuteReader()" and memberAccess.Expression is the "command"
                 // node
                 var variable = (IdentifierNameSyntax) node.Expression;
-                var variableType = _model.GetTypeInfo(variable).Type.Name;
+                var variableTypeSymbol = _model.GetTypeInfo(variable).Type;
+                var variableType = GetProperTypeName(variableTypeSymbol);
                 
-                if (variableType == null) return; //throw new ArgumentNullException(nameof(method));
+                if (variableTypeSymbol == null || variableType == null) return; //throw new ArgumentNullException(nameof(method));
                 Calls.Add(ApiCall.OfMethodInvocation(variableType, method.Name));
                 UpdateLastCalledMethod(method);
                 return;
@@ -128,13 +136,13 @@ namespace Roslyn_Extract_Methods {
                 var literalType = _model.GetTypeInfo(literalSyntax).Type;
                 
                 if (literalType == null) return;
-                Calls.Add(ApiCall.OfMethodInvocation(literalType.Name, method.Name));
+                Calls.Add(ApiCall.OfMethodInvocation(GetProperTypeName(literalType), method.Name));
                 UpdateLastCalledMethod(method);
                 return;
             }
             if (node.Expression is PredefinedTypeSyntax) {
                 var typeSyntax = (PredefinedTypeSyntax) node.Expression;
-                var typeName = _model.GetTypeInfo(typeSyntax).Type.Name;
+                var typeName = GetProperTypeName(_model.GetTypeInfo(typeSyntax).Type);
                 Calls.Add(ApiCall.OfMethodInvocation(typeName, method.Name));
                 UpdateLastCalledMethod(method);
                 return;
@@ -147,7 +155,7 @@ namespace Roslyn_Extract_Methods {
                     memberSyntax.Accept(this);
                     type = _lastCalledMethod;
                 }
-                else type = tryType.Type.Name;
+                else type = GetProperTypeName(tryType.Type);
                 
                 Calls.Add(ApiCall.OfMethodInvocation(type, method.Name));
                 UpdateLastCalledMethod(method);
@@ -157,9 +165,9 @@ namespace Roslyn_Extract_Methods {
                 var objSyntax = (ObjectCreationExpressionSyntax) node.Expression;
                 var type = _model.GetTypeInfo(objSyntax).Type;
                 if (type == null) return;
-                Calls.Add(ApiCall.OfConstructor(type.Name));
+                Calls.Add(ApiCall.OfConstructor(GetProperTypeName(type)));
                 if (node.Name != null) {
-                    Calls.Add(ApiCall.OfMethodInvocation(type.Name, method.Name));
+                    Calls.Add(ApiCall.OfMethodInvocation(GetProperTypeName(type), method.Name));
                 }
                 objSyntax.ArgumentList?.Accept(this);
                 objSyntax.Initializer?.Accept(this);
@@ -171,7 +179,7 @@ namespace Roslyn_Extract_Methods {
                 var type = _model.GetTypeInfo(instSyntax).Type;
                 
                 if (type == null) return;
-                Calls.Add(ApiCall.OfMethodInvocation(type.Name, method.Name));
+                Calls.Add(ApiCall.OfMethodInvocation(GetProperTypeName(type), method.Name));
                 UpdateLastCalledMethod(method);
                 return;
             }
@@ -190,7 +198,7 @@ namespace Roslyn_Extract_Methods {
                 var type = _model.GetTypeInfo(typeofSyntax.Type).Type;
                 
                 if (type == null) return;
-                Calls.Add(ApiCall.OfMethodInvocation(type.Name, method.Name));
+                Calls.Add(ApiCall.OfMethodInvocation(GetProperTypeName(type), method.Name));
                 UpdateLastCalledMethod(method);
                 return;
             }
@@ -208,7 +216,7 @@ namespace Roslyn_Extract_Methods {
                 var type = _model.GetTypeInfo(genericSyntax).Type;
                 
                 if (type == null) return;
-                Calls.Add(ApiCall.OfMethodInvocation(type.Name, method.Name));
+                Calls.Add(ApiCall.OfMethodInvocation(GetProperTypeName(type), method.Name));
                 UpdateLastCalledMethod(method);
                 return;
             }
