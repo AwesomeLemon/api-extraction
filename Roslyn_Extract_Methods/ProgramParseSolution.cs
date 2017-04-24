@@ -95,6 +95,7 @@ namespace Roslyn_Extract_Methods {
             var powershell = @"D:\DeepApiReps\PowerShell\PowerShell\powershell.sln";
             var outputFile = @"D:\DeepApiReps\res.txt";
             var outputFile2 = @"D:\DeepApiReps\res_2.txt";
+            var outputFile3 = @"D:\DeepApiReps\res_3.txt";
             var mononet = @"D:\DeepApiReps\mono\mono\net_4_x.sln";
             var jsonnet = @"D:\DeepApiReps\Newtonsoft.Json\Src\Newtonsoft.Json.sln";
 
@@ -148,7 +149,7 @@ namespace Roslyn_Extract_Methods {
 //                    keyValuePair.Value.Item2.ForEach(i => Console.Write(i + " "));
 //                    Console.WriteLine();
 //                }
-                        using (var writer = new StreamWriter(outputFile2, true)) {
+                        using (var writer = new StreamWriter(outputFile3, true)) {
                             writer.WriteLine("**" + slnPath);
                             foreach (var keyValuePair in extractMethodsFromSolution) {
                                 writer.WriteLine("//" + keyValuePair.Key.Identifier);
