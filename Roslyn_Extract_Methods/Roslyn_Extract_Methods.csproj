@@ -110,7 +110,6 @@
     <Compile Include="ApiCall.cs" />
     <Compile Include="ApiSequenceExtractor.cs" />
     <Compile Include="CommentExtractor.cs" />
-    <Compile Include="ProgramDownloadFromGit.cs" />
     <Compile Include="ProgramParseSolution.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MethodsCollector.cs" />

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Roslyn_Extract_Methods {
-    class CommentExtractor {
+    static class CommentExtractor {
         public static Dictionary<MethodDeclarationSyntax, string> ExtractSummaryComments(
             List<MethodDeclarationSyntax> methodDeclarations) {
             Dictionary<MethodDeclarationSyntax, string> methodComments = new Dictionary<MethodDeclarationSyntax, string>();
@@ -27,9 +27,9 @@ namespace Roslyn_Extract_Methods {
                 var stringComment = summary.Content.ToString();
                 stringComment = Regex.Replace(stringComment, @"\s+", " ", RegexOptions.Multiline).Replace("///", "").Trim();
                 stringComment = CleanUpTags(stringComment);
-                stringComment = removeStuffWithinSuchBrackets(stringComment, '(', ')');
-                stringComment = removeStuffWithinSuchBrackets(stringComment, '[', ']');
-                stringComment = removeStuffWithinSuchBrackets(stringComment, '{', '}');
+                stringComment = RemoveStuffWithinSuchBrackets(stringComment, '(', ')');
+                stringComment = RemoveStuffWithinSuchBrackets(stringComment, '[', ']');
+                stringComment = RemoveStuffWithinSuchBrackets(stringComment, '{', '}');
                 //                var sb = new StringBuilder();
                 //                foreach (var xmlNodeSyntax in summary.Content) {
                 //                    if (xmlNodeSyntax is XmlElementSyntax) {
@@ -39,7 +39,6 @@ namespace Roslyn_Extract_Methods {
                 //                    }
                 //                }
                 if (stringComment.Length < 3) {
-                    
                     continue;
                 }
                 methodComments[method] = stringComment;
@@ -49,7 +48,6 @@ namespace Roslyn_Extract_Methods {
 
         public static string CleanUpTags(string input) {
             int start = input.IndexOf('<');
-            //            string inputbackup = (string) input.Clone();
             while (start != -1) {
                 int end = input.IndexOf('>');
                 if (end != -1 && start < end) {
@@ -67,7 +65,7 @@ namespace Roslyn_Extract_Methods {
             return input;
         }
 
-        private static string removeStuffWithinSuchBrackets(string input, char leftChar, char rightChar) {
+        private static string RemoveStuffWithinSuchBrackets(string input, char leftChar, char rightChar) {
             int lbracket = input.IndexOf(leftChar);
             while (lbracket != -1) {
                 var rbracket = input.LastIndexOf(rightChar);
