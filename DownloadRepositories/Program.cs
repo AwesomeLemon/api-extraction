@@ -31,9 +31,6 @@ namespace DownloadRepositories {
             
             try {
                 p.Parse(args);
-                Console.WriteLine(_fileWithUrls);
-                Console.WriteLine(_pathForCloning);
-                Console.WriteLine(_pathToSlnFile);
             }
             catch (OptionException e) {
                 Console.WriteLine("Error when parsing input arguments");

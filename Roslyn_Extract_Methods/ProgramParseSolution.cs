@@ -6,6 +6,7 @@ using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
+using NDesk.Options;
 using Roslyn_Extract_Methods.Properties;
 
 namespace Roslyn_Extract_Methods {
@@ -24,7 +25,7 @@ namespace Roslyn_Extract_Methods {
                 solution = workspace.OpenSolutionAsync(solutionPath).Result;
             }
             catch (Exception e) {//this means that solution can't build for some reason.
-                using (var sw = new StreamWriter("exceptions.txt", true)) {
+                using (var sw = new StreamWriter(LogFilePath, true)) {
                     sw.WriteLine(0);
                     sw.WriteLine(e.ToString());
                 }
@@ -56,9 +57,23 @@ namespace Roslyn_Extract_Methods {
         
         private static string _pathToSlnFile = @"D:\DeepApiReps\slns.txt";
         private static string _pathToExtractedDataFile = @"D:\DeepApiReps\res_3.txt";
+
         private static readonly string FileProcessedSlnsCount = "sln_num.txt";
-        private static readonly string logFilePath = "exceptions.txt";
+        private static readonly string LogFilePath = "exceptions.txt";
         private static void Main(string[] args) {
+            var p = new OptionSet() {
+                { "output=", "Path to output file with comments and api calls", x => _pathToExtractedDataFile = x },
+                { "slns=", "Path to input file with paths of .sln files", x => _pathToSlnFile = x },
+            };
+
+            try {
+                p.Parse(args);
+            }
+            catch (OptionException e) {
+                Console.WriteLine("Error when parsing input arguments");
+                Console.WriteLine(e.ToString());
+                return;
+            }
             int skippedCnt = 0;
             int processedNum;
             using (var sr = new StreamReader(FileProcessedSlnsCount)) {
