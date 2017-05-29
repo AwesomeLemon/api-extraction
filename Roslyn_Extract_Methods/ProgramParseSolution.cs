@@ -7,7 +7,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
 using NDesk.Options;
-using Roslyn_Extract_Methods.Properties;
 
 namespace Roslyn_Extract_Methods {
     internal class ProgramParseSolution {
@@ -76,6 +75,7 @@ namespace Roslyn_Extract_Methods {
             }
             int skippedCnt = 0;
             int processedNum;
+            if (!File.Exists(FileProcessedSlnsCount)) File.Create(FileProcessedSlnsCount);
             using (var sr = new StreamReader(FileProcessedSlnsCount)) {
                 processedNum = int.Parse(sr.ReadLine()?? "0");
             }
@@ -100,8 +100,8 @@ namespace Roslyn_Extract_Methods {
                             }
                         }
                     }
-                    Console.WriteLine("...Waiting for 100 seconds...");
-                    Thread.Sleep(100000); //download is slower than extraction.
+                    Console.WriteLine("...Waiting for 30 seconds...");
+                    Thread.Sleep(30000); //download is slower than extraction.
                 }
             }
         }

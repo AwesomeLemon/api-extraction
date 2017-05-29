@@ -39,6 +39,7 @@ namespace DownloadRepositories {
             }
             int toSkipNum;
             int skippedCounter = 0;
+            if (!File.Exists(FileProcessedRepsCount)) File.Create(FileProcessedRepsCount);
             using (var sr = new StreamReader(FileProcessedRepsCount)) {
                 toSkipNum = int.Parse(sr.ReadLine() ?? "0");
             }
@@ -58,25 +59,31 @@ namespace DownloadRepositories {
 
                     try {
                         var ownerAndName = ownerAndNameStr.Split('/');
-                        var slnFileNames =
-                            from filename in GetFileListOfRep(ownerAndName)
-                            where filename.Contains(".sln")
-                            select filename;
-                        var fileNames = slnFileNames as IList<string> ?? slnFileNames.ToList();
+                        //var slnFileNames =
+                        //    from filename in GetFileListOfRep(ownerAndName)
+                        //    where filename.Contains(".sln")
+                        //    select filename;
+                        //var fileNames = slnFileNames as IList<string> ?? slnFileNames.ToList();
 
-                        if (fileNames.Any()) {
-                            Console.WriteLine($"Working with {curRepUrlClone}. Contains sln file. Cloning...");
-                            var repPath = _pathForCloning + ownerAndName[0] + "\\" + ownerAndName[1];
-                            CloneRepository(curRepUrlClone, repPath);
+                        //if (fileNames.Any()) {
+                        Console.WriteLine($"Working with {curRepUrlClone}. Contains sln file. Cloning...");
+                        var repPath = _pathForCloning + ownerAndName[0] + "_" + ownerAndName[1];
+                        CloneRepository(curRepUrlClone, repPath);
 
                             
-                            var slnFile = File.Open(_pathToSlnFile, FileMode.Append, FileAccess.Write, FileShare.Read);
-                            using (var slnFileWriter = new StreamWriter(slnFile)) {
-                                slnFileWriter.AutoFlush = true;
-                                foreach (var sln in fileNames) {
-                                    slnFileWriter.WriteLine(repPath + "\\" + sln);
+                        var slnFile = File.Open(_pathToSlnFile, FileMode.Append, FileAccess.Write, FileShare.Read);
+                        using (var slnFileWriter = new StreamWriter(slnFile)) {
+                            slnFileWriter.AutoFlush = true;
+                            foreach (string file in Directory.EnumerateFiles(repPath, "*.sln", SearchOption.AllDirectories))
+                                {
+                                Console.WriteLine("ssmth");
+                                slnFileWriter.WriteLine(file);
+                                //Console.WriteLine(file);
                                 }
-                            }
+                            //foreach (var sln in fileNames) {
+                            //    slnFileWriter.WriteLine(repPath + "\\" + sln);
+                            //}
+                         //   }
                         }
                     }
                     catch (Exception e) when (

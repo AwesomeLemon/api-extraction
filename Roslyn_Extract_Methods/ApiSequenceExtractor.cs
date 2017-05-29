@@ -90,7 +90,8 @@ namespace Roslyn_Extract_Methods {
                 _lastCalledMethod = GetProperTypeName(((ILocalSymbol) method).Type);
                 return;
             }
-            throw new NotImplementedException("Function called is something unaccounted for.");
+            _lastCalledMethod = "__oops__";
+            //throw new NotImplementedException("Function called is something unaccounted for.");
         }
 
         private string GetProperTypeName(ISymbol type) {
