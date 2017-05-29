@@ -34,6 +34,7 @@ namespace Roslyn_Extract_Methods {
 	    Console.WriteLine("got here");
             var res = new Dictionary<MethodDeclarationSyntax, Tuple<string, List<ApiCall>>>();
             foreach (var project in solution.Projects) {
+            Console.WriteLine("project {0}", project.FilePath);
                 foreach (var document in project.Documents) {
 		    Console.WriteLine("000");
                     if (!File.Exists(document.FilePath)) {
@@ -81,7 +82,7 @@ namespace Roslyn_Extract_Methods {
             }
             int skippedCnt = 0;
             int processedNum;
-            if (!File.Exists(FileProcessedSlnsCount)) File.Create(FileProcessedSlnsCount);
+            if (!File.Exists(FileProcessedSlnsCount)) File.Create(FileProcessedSlnsCount).Close();
             using (var sr = new StreamReader(FileProcessedSlnsCount)) {
                 processedNum = int.Parse(sr.ReadLine()?? "0");
             }
