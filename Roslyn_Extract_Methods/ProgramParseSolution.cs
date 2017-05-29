@@ -24,17 +24,23 @@ namespace Roslyn_Extract_Methods {
                 solution = workspace.OpenSolutionAsync(solutionPath).Result;
             }
             catch (Exception e) {//this means that solution can't build for some reason.
+		Console.WriteLine("sln is dead.");
                 using (var sw = new StreamWriter(LogFilePath, true)) {
                     sw.WriteLine(0);
                     sw.WriteLine(e.ToString());
                 }
                 return new Dictionary<MethodDeclarationSyntax, Tuple<string, List<ApiCall>>>();
             }
-
+	    Console.WriteLine("got here");
             var res = new Dictionary<MethodDeclarationSyntax, Tuple<string, List<ApiCall>>>();
             foreach (var project in solution.Projects) {
                 foreach (var document in project.Documents) {
-                    if (!File.Exists(document.FilePath)) continue;
+		    Console.WriteLine("000");
+                    if (!File.Exists(document.FilePath)) {
+			Console.WriteLine("aaa");
+			Console.WriteLine(document.FilePath);
+			continue;
+		    }
                     Console.WriteLine("Working with " + document.FilePath);
                     var rootNode = document.GetSyntaxRootAsync().Result;
 
