@@ -4,7 +4,6 @@
     <content url="file://$MODULE_DIR$/../..">
       <sourceFolder url="file://$MODULE_DIR$/../../DownloadRepositories" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../Roslyn_Extract_Methods" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/../../packages/LibGit2Sharp.NativeBinaries.1.0.129/libgit2" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../packages/LibGit2Sharp.NativeBinaries.1.0.164/libgit2" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../packages/LibGit2Sharp.NativeBinaries.1.0.164/runtimes/linux-x64/native/libgit2-a5cf255.so" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../../packages/LibGit2Sharp.NativeBinaries.1.0.164/runtimes/osx/native/libgit2-a5cf255.dylib" isTestSource="false" />

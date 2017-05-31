@@ -39,7 +39,7 @@ namespace DownloadRepositories {
             }
             int toSkipNum;
             int skippedCounter = 0;
-            if (!File.Exists(FileProcessedRepsCount)) File.Create(FileProcessedRepsCount);
+            if (!File.Exists(FileProcessedRepsCount)) File.Create(FileProcessedRepsCount).Close();
             using (var sr = new StreamReader(FileProcessedRepsCount)) {
                 toSkipNum = int.Parse(sr.ReadLine() ?? "0");
             }
