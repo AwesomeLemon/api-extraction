@@ -20,28 +20,32 @@ namespace Roslyn_Extract_Methods {
             string solutionPath) {
             var workspace = MSBuildWorkspace.Create();
             Solution solution;
-            try {
+            try
+            {
                 solution = workspace.OpenSolutionAsync(solutionPath).Result;
+                var project = workspace.OpenProjectAsync("/home/alex/api-extraction/TestProject/TestProject.csproj").Result;
+                Console.WriteLine(project.FilePath);
             }
             catch (Exception e) {//this means that solution can't build for some reason.
-		Console.WriteLine("sln is dead.");
+		        Console.WriteLine("sln is dead.");
                 using (var sw = new StreamWriter(LogFilePath, true)) {
                     sw.WriteLine(0);
                     sw.WriteLine(e.ToString());
                 }
                 return new Dictionary<MethodDeclarationSyntax, Tuple<string, List<ApiCall>>>();
             }
-	    Console.WriteLine("got here");
+	        Console.WriteLine("got here");
             var res = new Dictionary<MethodDeclarationSyntax, Tuple<string, List<ApiCall>>>();
             foreach (var project in solution.Projects) {
-            Console.WriteLine("project {0}", project.FilePath);
+                Console.WriteLine("project {0}", project.FilePath);
+                Console.WriteLine(project.HasDocuments);
                 foreach (var document in project.Documents) {
-		    Console.WriteLine("000");
+		            Console.WriteLine("000");
                     if (!File.Exists(document.FilePath)) {
-			Console.WriteLine("aaa");
-			Console.WriteLine(document.FilePath);
-			continue;
-		    }
+			            Console.WriteLine("aaa");
+			            Console.WriteLine(document.FilePath);
+			        continue;
+		            }
                     Console.WriteLine("Working with " + document.FilePath);
                     var rootNode = document.GetSyntaxRootAsync().Result;
 
@@ -71,7 +75,7 @@ namespace Roslyn_Extract_Methods {
                 { "output=", "Path to output file with comments and api calls", x => _pathToExtractedDataFile = x },
                 { "slns=", "Path to input file with paths of .sln files", x => _pathToSlnFile = x },
             };
-
+            Console.WriteLine("new start");
             try {
                 p.Parse(args);
             }
