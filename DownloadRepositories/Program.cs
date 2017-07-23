@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using NDesk.Options;
 using Newtonsoft.Json;
 using Octokit;
@@ -37,9 +40,19 @@ namespace DownloadRepositories {
                 Console.WriteLine(e.ToString());
                 return;
             }
+            
+            Task.Factory.StartNew(() =>
+            {
+                while (true)
+                {
+                    DeleteAllButNewestDirectories(_pathForCloning);
+                    Thread.Sleep(6000000);//100 minutes
+                }
+            });
+            
             int toSkipNum;
             int skippedCounter = 0;
-            if (!File.Exists(FileProcessedRepsCount)) File.Create(FileProcessedRepsCount);
+            if (!File.Exists(FileProcessedRepsCount)) File.Create(FileProcessedRepsCount).Close();
             using (var sr = new StreamReader(FileProcessedRepsCount)) {
                 toSkipNum = int.Parse(sr.ReadLine() ?? "0");
             }
@@ -66,17 +79,17 @@ namespace DownloadRepositories {
                         //var fileNames = slnFileNames as IList<string> ?? slnFileNames.ToList();
 
                         //if (fileNames.Any()) {
-                        Console.WriteLine($"Working with {curRepUrlClone}. Contains sln file. Cloning...");
+                        Console.WriteLine($"Working with {curRepUrlClone}. Cloning...");
                         var repPath = _pathForCloning + ownerAndName[0] + "_" + ownerAndName[1];
                         CloneRepository(curRepUrlClone, repPath);
-
+                       
                             
                         var slnFile = File.Open(_pathToSlnFile, FileMode.Append, FileAccess.Write, FileShare.Read);
                         using (var slnFileWriter = new StreamWriter(slnFile)) {
                             slnFileWriter.AutoFlush = true;
                             foreach (string file in Directory.EnumerateFiles(repPath, "*.sln", SearchOption.AllDirectories))
                                 {
-                                Console.WriteLine("ssmth");
+                                Console.WriteLine("Found .sln!");
                                 slnFileWriter.WriteLine(file);
                                 //Console.WriteLine(file);
                                 }
@@ -110,12 +123,52 @@ namespace DownloadRepositories {
 
         private static void CloneRepository(string cloneUrl, string path) {
             if (Directory.Exists(path)) return;
-            Repository.Clone(cloneUrl, path);
+//            Repository.Clone(cloneUrl, path);
+            var process = new Process {
+                StartInfo = new ProcessStartInfo {
+                    FileName = "git",
+                    Arguments = "clone --depth 1 " + cloneUrl + " " + path,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                }
+            };
+
+            process.Start();
+            process.WaitForExit();
         }
 
         private static IEnumerable<string> GetFileListOfRep(string[] ownerAndName) {
             var docs = Client.Repository.Content.GetAllContents(ownerAndName[0], ownerAndName[1]).Result;
             return docs.Select(i => i.Path);
+        }
+
+        private static void DeleteAllButNewestDirectories(string path)
+        {
+            var directoryInfo = new DirectoryInfo(path);
+            var subdirs = directoryInfo.EnumerateDirectories()
+                .OrderByDescending(d => d.LastAccessTime)
+                .Skip(20)
+                .Select(d => d.Name)
+                .ToList();
+            Console.WriteLine("Deleting dirs:");
+            subdirs.ForEach(Console.WriteLine);
+            Console.WriteLine();
+            subdirs.ForEach(s => DeleteDirectory(directoryInfo.FullName + "\\" + s));
+        }
+        
+        public static void DeleteDirectory(string path)
+        {
+            var process = new Process {
+                StartInfo = new ProcessStartInfo {
+                    FileName = "cmd.exe",
+                    Arguments = "/c @rmdir /s /q " + path,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                }
+            };
+
+            process.Start();
+            process.WaitForExit();
         }
     }
 }

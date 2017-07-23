@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -81,7 +82,7 @@ namespace Roslyn_Extract_Methods {
             }
             int skippedCnt = 0;
             int processedNum;
-            if (!File.Exists(FileProcessedSlnsCount)) File.Create(FileProcessedSlnsCount);
+            if (!File.Exists(FileProcessedSlnsCount)) File.Create(FileProcessedSlnsCount).Close();
             using (var sr = new StreamReader(FileProcessedSlnsCount)) {
                 processedNum = int.Parse(sr.ReadLine()?? "0");
             }
@@ -94,7 +95,21 @@ namespace Roslyn_Extract_Methods {
                         using (var sw = new StreamWriter(FileProcessedSlnsCount)) {
                             sw.WriteLine(++processedNum);
                         }
+                        
+                        Console.WriteLine("Restoring packages");
                         Console.WriteLine(slnPath);
+                        var process = new Process {
+                            StartInfo = new ProcessStartInfo {
+                                FileName = "nuget.exe",
+                                Arguments = "restore " + slnPath,
+                                CreateNoWindow = true,
+                                WindowStyle = ProcessWindowStyle.Hidden
+                            }
+                        };
+                        process.Start();
+                        process.WaitForExit();
+                        Console.WriteLine("Packages restore");
+                        
                         var extractMethodsFromSolution = ExtractMethodsFromSolution(slnPath);
                         using (var extractedDataWriter = new StreamWriter(_pathToExtractedDataFile, true)) {
                             extractedDataWriter.WriteLine("**" + slnPath);
