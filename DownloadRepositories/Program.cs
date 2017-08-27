@@ -24,6 +24,7 @@ namespace DownloadRepositories {
         private static readonly GitHubClient Client = new GitHubClient(new ProductHeaderValue("deep-api#"));
         private static readonly string FileProcessedRepsCount = "rep_num.txt";
         private static readonly string logFilePath = "exceptions.txt";
+        private static int _foldersToLeave = 500;
 
         static void Main(string[] args) {
             var p = new OptionSet() {
@@ -102,7 +103,8 @@ namespace DownloadRepositories {
                     catch (Exception e) when (
                         e is LibGit2Sharp.LibGit2SharpException ||
                         e is Octokit.ApiException ||
-                        e is AggregateException) {
+                        e is AggregateException ||
+                        e is DirectoryNotFoundException) {
                         Console.WriteLine(e + "\n" + e.StackTrace);
                         
                         using (var logFile = new StreamWriter(logFilePath, true))
@@ -147,7 +149,7 @@ namespace DownloadRepositories {
             var directoryInfo = new DirectoryInfo(path);
             var subdirs = directoryInfo.EnumerateDirectories()
                 .OrderByDescending(d => d.LastAccessTime)
-                .Skip(20)
+                .Skip(_foldersToLeave)
                 .Select(d => d.Name)
                 .ToList();
             Console.WriteLine("Deleting dirs:");
