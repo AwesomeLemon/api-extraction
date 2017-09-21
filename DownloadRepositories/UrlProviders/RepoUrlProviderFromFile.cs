@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 
-namespace DownloadRepositories {
-    public class RepoUrlProvider {
+namespace DownloadRepositories.UrlProviders {
+    public class RepoUrlProvider : IRepoUrlProvider {
         private readonly StreamReader _urlFileReader;
 
         public RepoUrlProvider(string FileWithUrls, int toSkipCount) {

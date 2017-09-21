@@ -8,6 +8,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DownloadRepositories.SlnWriters;
+using DownloadRepositories.UrlProviders;
 using NDesk.Options;
 using Newtonsoft.Json;
 using Octokit;
@@ -19,7 +21,7 @@ namespace DownloadRepositories {
     class Program {
         private static string _fileWithUrls = @"D:\DeepApiReps\reps_refactored_new.txt";
         private static string _pathForCloning = @"D:\DeepApiReps\";
-        private static string _pathToSlnFile = @"D:\DeepApiReps\slns.txt";
+        private static string _pathToSlnFile = @"D:\DeepApiReps\slns2.txt";
 
         private static readonly string FileProcessedRepsCount = "rep_num.txt";
         private static readonly string logFilePath = "exceptions.txt";
@@ -35,10 +37,10 @@ namespace DownloadRepositories {
             }
 
             int toSkipNum = GetAlreadyProcessedNum();
-            var repoUrlProvider = new RepoUrlProvider(_fileWithUrls, toSkipNum);
-
+            IRepoUrlProvider repoUrlProvider = new RepoUrlProvider(_fileWithUrls, toSkipNum);
+            ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
+            
             var nextUrlAndOwner = repoUrlProvider.GetNextUrlAndOwner();
-
             while (nextUrlAndOwner != null) {
                 try {
                     string curRepUrlClone = nextUrlAndOwner.Item1;
@@ -47,7 +49,9 @@ namespace DownloadRepositories {
                     var repPath = _pathForCloning + ownerAndName[0] + "_" + ownerAndName[1];
                     CloneRepository(curRepUrlClone, repPath);
 
-                    SolutionFinder.FindSolutionsInDirAndStoreInFile(repPath, _pathToSlnFile);
+                    Task.Factory.StartNew(() => {
+                        slnWriter.Write(Directory.EnumerateFiles(repPath, "*.sln", SearchOption.AllDirectories));
+                    });
                 }
                 catch (Exception e) when (
                     e is LibGit2Sharp.LibGit2SharpException ||

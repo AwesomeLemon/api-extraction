@@ -24,21 +24,22 @@ namespace Roslyn_Extract_Methods {
             try {
                 solution = workspace.OpenSolutionAsync(solutionPath).Result;
             }
-            catch (Exception e) {//this means that solution can't build for some reason.
-		Console.WriteLine("sln is dead.");
+            catch (Exception e) {
+                //this means that solution can't build for some reason.
+                Console.WriteLine("sln is dead.");
                 using (var sw = new StreamWriter(LogFilePath, true)) {
                     sw.WriteLine(0);
                     sw.WriteLine(e.ToString());
                 }
                 return new Dictionary<MethodDeclarationSyntax, Tuple<string, List<ApiCall>>>();
             }
-	    Console.WriteLine("got here");
+            Console.WriteLine("got here");
             var res = new Dictionary<MethodDeclarationSyntax, Tuple<string, List<ApiCall>>>();
             foreach (var project in solution.Projects) {
                 foreach (var document in project.Documents) {
                     if (!File.Exists(document.FilePath)) {
                         Console.WriteLine(document.FilePath);
-                    continue;
+                        continue;
                     }
                     Console.WriteLine("Working with " + document.FilePath);
                     var rootNode = document.GetSyntaxRootAsync().Result;
@@ -58,16 +59,17 @@ namespace Roslyn_Extract_Methods {
             }
             return res;
         }
-        
-        private static string _pathToSlnFile = @"D:\DeepApiReps\slns.txt";
+
+        private static string _pathToSlnFile = @"D:\DeepApiReps\slns2.txt";
         private static string _pathToExtractedDataFile = @"D:\DeepApiReps\res_3.txt";
 
         private static readonly string FileProcessedSlnsCount = "sln_num.txt";
         private static readonly string LogFilePath = "exceptions.txt";
+
         private static void Main(string[] args) {
             var p = new OptionSet() {
-                { "output=", "Path to output file with comments and api calls", x => _pathToExtractedDataFile = x },
-                { "slns=", "Path to input file with paths of .sln files", x => _pathToSlnFile = x },
+                {"output=", "Path to output file with comments and api calls", x => _pathToExtractedDataFile = x},
+                {"slns=", "Path to input file with paths of .sln files", x => _pathToSlnFile = x},
             };
 
             try {
@@ -82,7 +84,7 @@ namespace Roslyn_Extract_Methods {
             int processedNum;
             if (!File.Exists(FileProcessedSlnsCount)) File.Create(FileProcessedSlnsCount).Close();
             using (var sr = new StreamReader(FileProcessedSlnsCount)) {
-                processedNum = int.Parse(sr.ReadLine()?? "0");
+                processedNum = int.Parse(sr.ReadLine() ?? "0");
             }
             var slnFile = File.Open(_pathToSlnFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using (var slnFileReader = new StreamReader(slnFile)) {
@@ -93,7 +95,7 @@ namespace Roslyn_Extract_Methods {
                         using (var sw = new StreamWriter(FileProcessedSlnsCount)) {
                             sw.WriteLine(++processedNum);
                         }
-                        
+
                         Console.WriteLine("Restoring packages");
                         Console.WriteLine(slnPath);
                         var process = new Process {
@@ -107,7 +109,7 @@ namespace Roslyn_Extract_Methods {
                         process.Start();
                         process.WaitForExit();
                         Console.WriteLine("Packages restore");
-                        
+
                         var extractMethodsFromSolution = ExtractMethodsFromSolution(slnPath);
                         using (var extractedDataWriter = new StreamWriter(_pathToExtractedDataFile, true)) {
                             extractedDataWriter.WriteLine("**" + slnPath);
