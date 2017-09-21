@@ -13,17 +13,16 @@ namespace DownloadRepositories.UrlProviders {
                 curRepUrlClone = _urlFileReader.ReadLine();
                 ownerAndNameStr = _urlFileReader.ReadLine();
                 curRepUrlApi = _urlFileReader.ReadLine();
-                if (curRepUrlClone != null && curRepUrlApi != null) break;
+                if (curRepUrlClone == null && curRepUrlApi == null) break;
             }
         }
 
-        public Tuple<string, string> GetNextUrlAndOwner() {
+        public string GetNextUrl() {
             string curRepUrlClone, ownerAndNameStr, curRepUrlApi;
             curRepUrlClone = _urlFileReader.ReadLine();
             ownerAndNameStr = _urlFileReader.ReadLine();
             curRepUrlApi = _urlFileReader.ReadLine();
-            return (curRepUrlClone == null || ownerAndNameStr == null) ? null 
-                : new Tuple<string, string>(curRepUrlClone, ownerAndNameStr);
+            return curRepUrlClone;
         }
     }
 }

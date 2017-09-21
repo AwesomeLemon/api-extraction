@@ -40,13 +40,13 @@ namespace DownloadRepositories {
             IRepoUrlProvider repoUrlProvider = new RepoUrlProvider(_fileWithUrls, toSkipNum);
             ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
             
-            var nextUrlAndOwner = repoUrlProvider.GetNextUrlAndOwner();
-            while (nextUrlAndOwner != null) {
+            var nextUrl = repoUrlProvider.GetNextUrl();
+            while (nextUrl != null) {
                 try {
-                    string curRepUrlClone = nextUrlAndOwner.Item1;
-                    var ownerAndName = nextUrlAndOwner.Item2.Split('/');
+                    string curRepUrlClone = nextUrl;
+                    var ownerAndName = ExtractNameAndOwnerFromUrl(curRepUrlClone);
 
-                    var repPath = _pathForCloning + ownerAndName[0] + "_" + ownerAndName[1];
+                    var repPath = _pathForCloning + ownerAndName.Replace('/', '_');
                     CloneRepository(curRepUrlClone, repPath);
 
                     Task.Factory.StartNew(() => {
@@ -69,7 +69,7 @@ namespace DownloadRepositories {
                     }
                 }
 
-                nextUrlAndOwner = repoUrlProvider.GetNextUrlAndOwner();
+                nextUrl = repoUrlProvider.GetNextUrl();
             }
         }
 
@@ -152,6 +152,13 @@ namespace DownloadRepositories {
 
             process.Start();
             process.WaitForExit();
+        }
+
+        public static string ExtractNameAndOwnerFromUrl(string url = "https://api.github.com/repos/kizzx2/cmd-recycle") {
+            var lastSlash = url.LastIndexOf('/');
+            var secondToLastSlach = url.LastIndexOf('/', lastSlash - 1);
+            var ownerNameAndDotGit = url.Substring(secondToLastSlach + 1);
+            return ownerNameAndDotGit.Substring(0, ownerNameAndDotGit.Length - 4);
         }
     }
 }
