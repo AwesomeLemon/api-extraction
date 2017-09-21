@@ -64,6 +64,8 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RepoUrlProvider.cs" />
+    <Compile Include="SolutionFinder.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

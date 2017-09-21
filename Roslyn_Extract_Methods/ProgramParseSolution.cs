@@ -36,12 +36,10 @@ namespace Roslyn_Extract_Methods {
             var res = new Dictionary<MethodDeclarationSyntax, Tuple<string, List<ApiCall>>>();
             foreach (var project in solution.Projects) {
                 foreach (var document in project.Documents) {
-		    Console.WriteLine("000");
                     if (!File.Exists(document.FilePath)) {
-			Console.WriteLine("aaa");
-			Console.WriteLine(document.FilePath);
-			continue;
-		    }
+                        Console.WriteLine(document.FilePath);
+                    continue;
+                    }
                     Console.WriteLine("Working with " + document.FilePath);
                     var rootNode = document.GetSyntaxRootAsync().Result;
 
