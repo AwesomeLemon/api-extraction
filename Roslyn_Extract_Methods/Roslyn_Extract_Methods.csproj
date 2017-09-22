@@ -130,6 +130,8 @@
     <Compile Include="ProgramParseSolution.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MethodsCollector.cs" />
+    <Compile Include="ResultWriters\IResultWriter.cs" />
+    <Compile Include="ResultWriters\ResultWriterToFile.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

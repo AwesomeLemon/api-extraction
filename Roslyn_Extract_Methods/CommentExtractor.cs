@@ -8,40 +8,42 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Roslyn_Extract_Methods {
     static class CommentExtractor {
-        public static Dictionary<MethodDeclarationSyntax, string> ExtractSummaryComments(
+        public static Dictionary<MethodDeclarationSyntax, Tuple<string, string>> ExtractSummaryComments(
             List<MethodDeclarationSyntax> methodDeclarations) {
-            Dictionary<MethodDeclarationSyntax, string> methodComments = new Dictionary<MethodDeclarationSyntax, string>();
-            
+            var methodComments =
+                new Dictionary<MethodDeclarationSyntax, Tuple<string, string>>();
+
             foreach (var method in methodDeclarations) {
                 var xmlTrivia = method.GetLeadingTrivia()
                     .Select(i => i.GetStructure())
                     .OfType<DocumentationCommentTriviaSyntax>()
                     .FirstOrDefault();
                 if (xmlTrivia == null) continue;
-
+                var fullComment = xmlTrivia.Content.ToString();
+                if (fullComment.StartsWith(" <summary>\r\n\t\t/// Clean up any resources being used.")
+                    || fullComment.StartsWith(
+                        " <summary>\r\n\t\t/// Required method for Designer support - do not modify")) {
+                    continue;
+                }
                 var summary = xmlTrivia.ChildNodes()
                     .OfType<XmlElementSyntax>()
                     .FirstOrDefault(i => i.StartTag.Name.ToString().Equals("summary"));
-                if (summary == null) continue;
+                if (summary == null) {
+                    methodComments[method] = new Tuple<string, string>(fullComment, null);
+                    continue;
+                }
 
                 var stringComment = summary.Content.ToString();
-                stringComment = Regex.Replace(stringComment, @"\s+", " ", RegexOptions.Multiline).Replace("///", "").Trim();
+                stringComment = Regex.Replace(stringComment, @"\s+", " ", RegexOptions.Multiline).Replace("///", "")
+                    .Trim();
                 stringComment = CleanUpTags(stringComment);
                 stringComment = RemoveStuffWithinSuchBrackets(stringComment, '(', ')');
                 stringComment = RemoveStuffWithinSuchBrackets(stringComment, '[', ']');
                 stringComment = RemoveStuffWithinSuchBrackets(stringComment, '{', '}');
-                //                var sb = new StringBuilder();
-                //                foreach (var xmlNodeSyntax in summary.Content) {
-                //                    if (xmlNodeSyntax is XmlElementSyntax) {
-                //                        var elementSyntax = (XmlElementSyntax) xmlNodeSyntax;
-                //                        var a = elementSyntax.Content;
-                //                        
-                //                    }
-                //                }
                 if (stringComment.Length < 3) {
                     continue;
                 }
-                methodComments[method] = stringComment;
+                methodComments[method] = new Tuple<string, string>(fullComment, stringComment);
             }
             return methodComments;
         }
@@ -57,8 +59,10 @@ namespace Roslyn_Extract_Methods {
                         var lastIndexOf = tag.IndexOf("\"", startIndex, StringComparison.Ordinal);
                         if (lastIndexOf < startIndex) break;
                         input = input.Replace(tag, tag.Substring(startIndex, lastIndexOf - startIndex));
-                    } else input = input.Remove(start, end - start + 1);
-                } else break;
+                    }
+                    else input = input.Remove(start, end - start + 1);
+                }
+                else break;
 
                 start = input.IndexOf('<');
             }
@@ -71,7 +75,8 @@ namespace Roslyn_Extract_Methods {
                 var rbracket = input.LastIndexOf(rightChar);
                 if (rbracket != -1 && lbracket < rbracket) {
                     input = input.Remove(lbracket, rbracket - lbracket + 1);
-                } else break;
+                }
+                else break;
 
                 lbracket = input.IndexOf(leftChar);
             }

@@ -17,7 +17,7 @@ namespace Roslyn_Extract_Methods {
             return extractor.Calls;
         }
 
-        private static Dictionary<MethodDeclarationSyntax, Tuple<string, List<ApiCall>>> ExtractMethodsFromSolution(
+        private static Dictionary<MethodDeclarationSyntax, Tuple<Tuple<string, string>, List<ApiCall>>> ExtractMethodsFromSolution(
             string solutionPath) {
             var workspace = MSBuildWorkspace.Create();
             Solution solution;
@@ -31,10 +31,10 @@ namespace Roslyn_Extract_Methods {
                     sw.WriteLine(0);
                     sw.WriteLine(e.ToString());
                 }
-                return new Dictionary<MethodDeclarationSyntax, Tuple<string, List<ApiCall>>>();
+                return new Dictionary<MethodDeclarationSyntax, Tuple<Tuple<string, string>, List<ApiCall>>>();
             }
             Console.WriteLine("got here");
-            var res = new Dictionary<MethodDeclarationSyntax, Tuple<string, List<ApiCall>>>();
+            var res = new Dictionary<MethodDeclarationSyntax, Tuple<Tuple<string, string>, List<ApiCall>>>();
             foreach (var project in solution.Projects) {
                 foreach (var document in project.Documents) {
                     if (!File.Exists(document.FilePath)) {
@@ -53,7 +53,7 @@ namespace Roslyn_Extract_Methods {
                         var extractedApiSequences = ExtractApiSequence(method, model);
                         if (extractedApiSequences.Count == 0) continue;
                         res.Add(method,
-                            new Tuple<string, List<ApiCall>>(methodsAndComments[method], extractedApiSequences));
+                            new Tuple<Tuple<string, string>, List<ApiCall>>(methodsAndComments[method], extractedApiSequences));
                     }
                 }
             }
@@ -67,25 +67,11 @@ namespace Roslyn_Extract_Methods {
         private static readonly string LogFilePath = "exceptions.txt";
 
         private static void Main(string[] args) {
-            var p = new OptionSet() {
-                {"output=", "Path to output file with comments and api calls", x => _pathToExtractedDataFile = x},
-                {"slns=", "Path to input file with paths of .sln files", x => _pathToSlnFile = x},
-            };
-
-            try {
-                p.Parse(args);
-            }
-            catch (OptionException e) {
-                Console.WriteLine("Error when parsing input arguments");
-                Console.WriteLine(e.ToString());
-                return;
-            }
+            if (!ParseArgs(args)) return;
+            
             int skippedCnt = 0;
-            int processedNum;
-            if (!File.Exists(FileProcessedSlnsCount)) File.Create(FileProcessedSlnsCount).Close();
-            using (var sr = new StreamReader(FileProcessedSlnsCount)) {
-                processedNum = int.Parse(sr.ReadLine() ?? "0");
-            }
+            var processedNum = GetAlreadyProcessedNum();
+            var resultWriterToFile = new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
             var slnFile = File.Open(_pathToSlnFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             using (var slnFileReader = new StreamReader(slnFile)) {
                 while (true) {
@@ -111,20 +97,38 @@ namespace Roslyn_Extract_Methods {
                         Console.WriteLine("Packages restore");
 
                         var extractMethodsFromSolution = ExtractMethodsFromSolution(slnPath);
-                        using (var extractedDataWriter = new StreamWriter(_pathToExtractedDataFile, true)) {
-                            extractedDataWriter.WriteLine("**" + slnPath);
-                            foreach (var keyValuePair in extractMethodsFromSolution) {
-                                extractedDataWriter.WriteLine("//" + keyValuePair.Key.Identifier);
-                                extractedDataWriter.WriteLine(keyValuePair.Value.Item1);
-                                keyValuePair.Value.Item2.ForEach(i => extractedDataWriter.Write(i + " "));
-                                extractedDataWriter.WriteLine();
-                            }
-                        }
+                        resultWriterToFile.Write(extractMethodsFromSolution, slnPath);
                     }
                     Console.WriteLine("...Waiting for 30 seconds...");
                     Thread.Sleep(30000); //download is slower than extraction.
                 }
             }
+        }
+
+        private static int GetAlreadyProcessedNum() {
+            int processedNum;
+            if (!File.Exists(FileProcessedSlnsCount)) File.Create(FileProcessedSlnsCount).Close();
+            using (var sr = new StreamReader(FileProcessedSlnsCount)) {
+                processedNum = int.Parse(sr.ReadLine() ?? "0");
+            }
+            return processedNum;
+        }
+
+        private static bool ParseArgs(string[] args) {
+            var p = new OptionSet() {
+                {"output=", "Path to output file with comments and api calls", x => _pathToExtractedDataFile = x},
+                {"slns=", "Path to input file with paths of .sln files", x => _pathToSlnFile = x},
+            };
+
+            try {
+                p.Parse(args);
+            }
+            catch (OptionException e) {
+                Console.WriteLine("Error when parsing input arguments");
+                Console.WriteLine(e.ToString());
+                return false;
+            }
+            return true;
         }
     }
 }
