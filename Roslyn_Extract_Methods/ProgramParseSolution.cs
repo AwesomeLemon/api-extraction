@@ -18,14 +18,14 @@ namespace Roslyn_Extract_Methods {
             return new Tuple<string, List<ApiCall>>(extractor.GetFullMethodName(method), extractor.Calls);
         }
 
-        private static Dictionary<string, Tuple<Tuple<string, string, bool>, List<ApiCall>>> ExtractMethodsFromSolution(
+        private static Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>>> ExtractMethodsFromSolution(
             string solutionPath) {
             Solution solution = BuildSolution(solutionPath);
             if (solution == null) {
-                return new Dictionary<string, Tuple<Tuple<string, string, bool>, List<ApiCall>>>();
+                return new Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>>>();
             }
             Console.WriteLine("Solution was build");
-            var res = new Dictionary<string, Tuple<Tuple<string, string, bool>, List<ApiCall>>>();
+            var res = new Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>>>();
             foreach (var project in solution.Projects) {
                 foreach (var document in project.Documents) {
                     if (!File.Exists(document.FilePath)) {
@@ -47,7 +47,7 @@ namespace Roslyn_Extract_Methods {
                         var methodNameAndCalls = ExtractApiSequence(method, model);
                         if (methodNameAndCalls.Item2.Count == 0) continue;
                         res.Add(methodNameAndCalls.Item1,
-                            new Tuple<Tuple<string, string, bool>, List<ApiCall>>(methodsAndComments[method], methodNameAndCalls.Item2));
+                            new Tuple<MethodCommentInfo, List<ApiCall>>(methodsAndComments[method], methodNameAndCalls.Item2));
                     }
                 }
             }

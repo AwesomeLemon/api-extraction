@@ -8,10 +8,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Roslyn_Extract_Methods {
     static class CommentExtractor {
-        public static Dictionary<MethodDeclarationSyntax, Tuple<string, string, bool>> ExtractSummaryComments(
+        public static Dictionary<MethodDeclarationSyntax, MethodCommentInfo> ExtractSummaryComments(
             List<MethodDeclarationSyntax> methodDeclarations) {
             var methodComments =
-                new Dictionary<MethodDeclarationSyntax, Tuple<string, string, bool>>();
+                new Dictionary<MethodDeclarationSyntax, MethodCommentInfo>();
 
             foreach (var method in methodDeclarations) {
                 var xmlTrivia = method.GetLeadingTrivia()
@@ -22,7 +22,7 @@ namespace Roslyn_Extract_Methods {
                     var fullString = method.GetLeadingTrivia().ToFullString();
                     if (!fullString.Contains("//")) continue;
                     fullString = CleanString(fullString).Replace("//", "");
-                    methodComments[method] = new Tuple<string, string, bool>(fullString, null, false);
+                    methodComments[method] = new MethodCommentInfo(fullString, null, false);
                     continue;
                 }
                 var fullComment = xmlTrivia.Content.ToString();
@@ -35,7 +35,7 @@ namespace Roslyn_Extract_Methods {
                     .OfType<XmlElementSyntax>()
                     .FirstOrDefault(i => i.StartTag.Name.ToString().Equals("summary"));
                 if (summary == null) {
-                    methodComments[method] = new Tuple<string, string, bool>(fullComment, null, true);
+                    methodComments[method] = new MethodCommentInfo(fullComment, null, true);
                     continue;
                 }
 
@@ -44,7 +44,7 @@ namespace Roslyn_Extract_Methods {
                 if (stringComment.Length < 3) {
                     continue;
                 }
-                methodComments[method] = new Tuple<string, string, bool>(fullComment, stringComment, true);
+                methodComments[method] = new MethodCommentInfo(fullComment, stringComment, true);
             }
             return methodComments;
         }

@@ -12,12 +12,12 @@ namespace Roslyn_Extract_Methods.Database {
         public bool CommentIsXml { get; set; }
         public DateTime SampledAt { get; set; }
 
-        public Method( string name, string fullComment, string firstSummarySentence, string apiCalls, bool commentIsXml) {
+        public Method( string name, string apiCalls, MethodCommentInfo methodCommentInfo) {
             Name = name;
-            FullComment = fullComment;
-            FirstSummarySentence = firstSummarySentence;
+            FullComment = methodCommentInfo.FullComment;
+            FirstSummarySentence = methodCommentInfo.FirstSentence;
             ApiCalls = apiCalls;
-            CommentIsXml = commentIsXml;
+            CommentIsXml = methodCommentInfo.IsXml;
             SampledAt = DateTime.Now;
         }
     }
