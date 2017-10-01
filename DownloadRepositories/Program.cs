@@ -1,21 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DownloadRepositories.SlnWriters;
 using DownloadRepositories.UrlProviders;
 using NDesk.Options;
-using Newtonsoft.Json;
-using Octokit;
-using FileMode = System.IO.FileMode;
-using ProductHeaderValue = Octokit.ProductHeaderValue;
-using Repository = LibGit2Sharp.Repository;
 
 namespace DownloadRepositories {
     class Program {

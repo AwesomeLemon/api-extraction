@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using static Roslyn_Extract_Methods.Util;
+using Roslyn_Extract_Methods.Database;
 
 namespace Roslyn_Extract_Methods {
     internal class ApiSequenceExtractor : CSharpSyntaxWalker {
@@ -15,12 +15,20 @@ namespace Roslyn_Extract_Methods {
         }
 
         public List<ApiCall> Calls { get; } = new List<ApiCall>();
+        public List<MethodParameter> MethodParameters { get; } = new List<MethodParameter>();
 
         public string GetFullMethodName(MethodDeclarationSyntax methodNode) {
             var declaredSymbol = _model.GetDeclaredSymbol(methodNode);
             return declaredSymbol.ContainingSymbol.ToDisplayString() + "." + methodNode.Identifier.ToString();
         }
-        
+
+        public override void VisitParameter(ParameterSyntax node) {
+            var parameterSymbol = _model.GetDeclaredSymbol(node);
+            var parameterSymbolType = parameterSymbol.Type;
+            var properTypeName = GetProperTypeName(parameterSymbolType);
+            MethodParameters.Add(new MethodParameter(properTypeName, node.Identifier.Text));
+        }
+
         public override void VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
             try {
                 var ctorSymbol = _model.GetTypeInfo(node).Type;

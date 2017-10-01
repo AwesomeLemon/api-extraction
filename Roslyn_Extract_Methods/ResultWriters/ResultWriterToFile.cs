@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Roslyn_Extract_Methods.Database;
 
 namespace Roslyn_Extract_Methods.ResultWriters {
     class ResultWriterToFile : IResultWriter {
@@ -12,7 +12,7 @@ namespace Roslyn_Extract_Methods.ResultWriters {
             _extractedDataWriter.AutoFlush = true;
         }
 
-        public void Write(Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>>> methodsCommentsCalls, string slnPath) {
+        public void Write(Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>, List<MethodParameter>>> methodsCommentsCalls, string slnPath) {
             _extractedDataWriter.WriteLine("**" + slnPath);
             foreach (var keyValuePair in methodsCommentsCalls) {
                 _extractedDataWriter.WriteLine("//" + keyValuePair.Key);

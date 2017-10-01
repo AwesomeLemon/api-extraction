@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DownloadRepositories.UrlProviders {
+﻿namespace DownloadRepositories.UrlProviders {
     public interface IRepoUrlProvider {
         string GetNextUrl();
     }

@@ -8,24 +8,28 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
 using NDesk.Options;
+using Roslyn_Extract_Methods.Database;
 using Roslyn_Extract_Methods.SlnProviders;
 
 namespace Roslyn_Extract_Methods {
     internal class ProgramParseSolution {
-        public static Tuple<string, List<ApiCall>> ExtractApiSequence(MethodDeclarationSyntax method, SemanticModel model) {
+        public static Tuple<string, List<ApiCall>, List<MethodParameter>> ExtractApiSequence(
+            MethodDeclarationSyntax method, SemanticModel model) {
             var extractor = new ApiSequenceExtractor(model);
             extractor.Visit(method);
-            return new Tuple<string, List<ApiCall>>(extractor.GetFullMethodName(method), extractor.Calls);
+            return new Tuple<string, List<ApiCall>, List<MethodParameter>>(extractor.GetFullMethodName(method),
+                extractor.Calls, extractor.MethodParameters);
         }
 
-        private static Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>>> ExtractMethodsFromSolution(
-            string solutionPath) {
+        private static Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>, List<MethodParameter>>>
+            ExtractMethodsFromSolution(
+                string solutionPath) {
             Solution solution = BuildSolution(solutionPath);
             if (solution == null) {
-                return new Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>>>();
+                return new Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>, List<MethodParameter>>>();
             }
             Console.WriteLine("Solution was build");
-            var res = new Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>>>();
+            var res = new Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>, List<MethodParameter>>>();
             foreach (var project in solution.Projects) {
                 foreach (var document in project.Documents) {
                     if (!File.Exists(document.FilePath)) {
@@ -34,20 +38,21 @@ namespace Roslyn_Extract_Methods {
                         continue;
                     }
                     Console.WriteLine("Working with " + document.FilePath);
-                    
+
                     var rootNode = document.GetSyntaxRootAsync().Result;
                     var methodCollector = new MethodsCollector();
                     methodCollector.Visit(rootNode);
-                    
+
                     var methodsAndComments = CommentExtractor.ExtractSummaryComments(methodCollector.MethodDecls);
                     var curMethods = methodsAndComments.Keys.ToList();
-                    
+
                     var model = document.GetSemanticModelAsync().Result;
                     foreach (var method in curMethods) {
                         var methodNameAndCalls = ExtractApiSequence(method, model);
                         if (methodNameAndCalls.Item2.Count == 0) continue;
                         res.Add(methodNameAndCalls.Item1,
-                            new Tuple<MethodCommentInfo, List<ApiCall>>(methodsAndComments[method], methodNameAndCalls.Item2));
+                            new Tuple<MethodCommentInfo, List<ApiCall>, List<MethodParameter>>(
+                                methodsAndComments[method], methodNameAndCalls.Item2, methodNameAndCalls.Item3));
                     }
                 }
             }
@@ -80,8 +85,10 @@ namespace Roslyn_Extract_Methods {
 
         private static void Main(string[] args) {
             if (!ParseArgs(args)) return;
-            
-            var resultWriter = new ResultWriters.ResultWriterToDatabase("D:\\hubic\\mydb");//new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
+
+            var resultWriter =
+                new ResultWriters.ResultWriterToDatabase(
+                    "D:\\hubic\\mydb"); //new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
             using (var slnProvider = new SlnProviderFromFile(_pathToSlnFile, FileProcessedSlnsCount)) {
                 while (true) {
                     while (slnProvider.MoveNext()) {
@@ -112,7 +119,6 @@ namespace Roslyn_Extract_Methods {
             Console.WriteLine("Packages restored");
         }
 
-        
 
         private static bool ParseArgs(string[] args) {
             var p = new OptionSet() {
