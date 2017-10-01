@@ -40,14 +40,14 @@ namespace Roslyn_Extract_Methods {
         
         private static string GetProperTypeName(ISymbol type) {
             var displayFormat = new SymbolDisplayFormat(
-                SymbolDisplayGlobalNamespaceStyle.Included,
+                SymbolDisplayGlobalNamespaceStyle.Omitted,
                 SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
                 SymbolDisplayGenericsOptions.IncludeTypeConstraints,
                 miscellaneousOptions: SymbolDisplayMiscellaneousOptions.ExpandNullable
             );
             var displayString = type.ToDisplayString(displayFormat);
             if (!displayString.Contains(".")) {
-                displayString = type.ContainingSymbol.ToDisplayString() + "." + displayString;
+                displayString = type.ContainingSymbol.ToDisplayString();
             }
 
             return displayString;
