@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
 using NDesk.Options;
+using Roslyn_Extract_Methods.SlnProviders;
 
 namespace Roslyn_Extract_Methods {
     internal class ProgramParseSolution {
@@ -60,7 +61,7 @@ namespace Roslyn_Extract_Methods {
             return res;
         }
 
-        private static string _pathToSlnFile = @"D:\DeepApiReps\slns2.txt";
+        private static string _pathToSlnFile = @"D:\DeepApiReps\slns22.txt";
         private static string _pathToExtractedDataFile = @"D:\DeepApiReps\res_3.txt";
 
         private static readonly string FileProcessedSlnsCount = "sln_num.txt";
@@ -69,33 +70,12 @@ namespace Roslyn_Extract_Methods {
         private static void Main(string[] args) {
             if (!ParseArgs(args)) return;
             
-            int skippedCnt = 0;
-            var processedNum = GetAlreadyProcessedNum();
             var resultWriterToFile = new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
-            var slnFile = File.Open(_pathToSlnFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using (var slnFileReader = new StreamReader(slnFile)) {
+            using (var slnProvider = new SlnProviderFromFile(_pathToSlnFile, FileProcessedSlnsCount)) {
                 while (true) {
-                    string slnPath;
-                    while ((slnPath = slnFileReader.ReadLine()) != null) {
-                        if (skippedCnt++ < processedNum) continue;
-                        using (var sw = new StreamWriter(FileProcessedSlnsCount)) {
-                            sw.WriteLine(++processedNum);
-                        }
-
-                        Console.WriteLine("Restoring packages");
-                        Console.WriteLine(slnPath);
-                        var process = new Process {
-                            StartInfo = new ProcessStartInfo {
-                                FileName = "nuget.exe",
-                                Arguments = "restore " + slnPath,
-                                CreateNoWindow = true,
-                                WindowStyle = ProcessWindowStyle.Hidden
-                            }
-                        };
-                        process.Start();
-                        process.WaitForExit();
-                        Console.WriteLine("Packages restore");
-
+                    while (slnProvider.MoveNext()) {
+                        var slnPath = slnProvider.Current;
+                        RestorePackages(slnPath);
                         var extractMethodsFromSolution = ExtractMethodsFromSolution(slnPath);
                         resultWriterToFile.Write(extractMethodsFromSolution, slnPath);
                     }
@@ -105,14 +85,23 @@ namespace Roslyn_Extract_Methods {
             }
         }
 
-        private static int GetAlreadyProcessedNum() {
-            int processedNum;
-            if (!File.Exists(FileProcessedSlnsCount)) File.Create(FileProcessedSlnsCount).Close();
-            using (var sr = new StreamReader(FileProcessedSlnsCount)) {
-                processedNum = int.Parse(sr.ReadLine() ?? "0");
-            }
-            return processedNum;
+        private static void RestorePackages(string slnPath) {
+            Console.WriteLine("Restoring packages");
+            Console.WriteLine(slnPath);
+            var process = new Process {
+                StartInfo = new ProcessStartInfo {
+                    FileName = "nuget.exe",
+                    Arguments = "restore " + slnPath,
+                    CreateNoWindow = true,
+                    WindowStyle = ProcessWindowStyle.Hidden
+                }
+            };
+            process.Start();
+            process.WaitForExit();
+            Console.WriteLine("Packages restored");
         }
+
+        
 
         private static bool ParseArgs(string[] args) {
             var p = new OptionSet() {

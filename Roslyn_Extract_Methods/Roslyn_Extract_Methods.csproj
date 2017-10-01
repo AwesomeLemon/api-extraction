@@ -132,6 +132,8 @@
     <Compile Include="MethodsCollector.cs" />
     <Compile Include="ResultWriters\IResultWriter.cs" />
     <Compile Include="ResultWriters\ResultWriterToFile.cs" />
+    <Compile Include="SlnProviders\SlnProviderFromFile.cs" />
+    <Compile Include="SlnProviders\ISlnProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
