@@ -12,20 +12,20 @@ using Roslyn_Extract_Methods.SlnProviders;
 
 namespace Roslyn_Extract_Methods {
     internal class ProgramParseSolution {
-        public static List<ApiCall> ExtractApiSequence(MethodDeclarationSyntax method, SemanticModel model) {
+        public static Tuple<string, List<ApiCall>> ExtractApiSequence(MethodDeclarationSyntax method, SemanticModel model) {
             var extractor = new ApiSequenceExtractor(model);
             extractor.Visit(method);
-            return extractor.Calls;
+            return new Tuple<string, List<ApiCall>>(extractor.GetFullMethodName(method), extractor.Calls);
         }
 
-        private static Dictionary<MethodDeclarationSyntax, Tuple<Tuple<string, string>, List<ApiCall>>> ExtractMethodsFromSolution(
+        private static Dictionary<string, Tuple<Tuple<string, string, bool>, List<ApiCall>>> ExtractMethodsFromSolution(
             string solutionPath) {
             Solution solution = BuildSolution(solutionPath);
             if (solution == null) {
-                return new Dictionary<MethodDeclarationSyntax, Tuple<Tuple<string, string>, List<ApiCall>>>();
+                return new Dictionary<string, Tuple<Tuple<string, string, bool>, List<ApiCall>>>();
             }
             Console.WriteLine("Solution was build");
-            var res = new Dictionary<MethodDeclarationSyntax, Tuple<Tuple<string, string>, List<ApiCall>>>();
+            var res = new Dictionary<string, Tuple<Tuple<string, string, bool>, List<ApiCall>>>();
             foreach (var project in solution.Projects) {
                 foreach (var document in project.Documents) {
                     if (!File.Exists(document.FilePath)) {
@@ -44,10 +44,10 @@ namespace Roslyn_Extract_Methods {
                     
                     var model = document.GetSemanticModelAsync().Result;
                     foreach (var method in curMethods) {
-                        var extractedApiSequences = ExtractApiSequence(method, model);
-                        if (extractedApiSequences.Count == 0) continue;
-                        res.Add(method,
-                            new Tuple<Tuple<string, string>, List<ApiCall>>(methodsAndComments[method], extractedApiSequences));
+                        var methodNameAndCalls = ExtractApiSequence(method, model);
+                        if (methodNameAndCalls.Item2.Count == 0) continue;
+                        res.Add(methodNameAndCalls.Item1,
+                            new Tuple<Tuple<string, string, bool>, List<ApiCall>>(methodsAndComments[method], methodNameAndCalls.Item2));
                     }
                 }
             }
@@ -81,14 +81,14 @@ namespace Roslyn_Extract_Methods {
         private static void Main(string[] args) {
             if (!ParseArgs(args)) return;
             
-            var resultWriterToFile = new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
+            var resultWriter = new ResultWriters.ResultWriterToDatabase("D:\\YandexDisk\\mydb");//new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
             using (var slnProvider = new SlnProviderFromFile(_pathToSlnFile, FileProcessedSlnsCount)) {
                 while (true) {
                     while (slnProvider.MoveNext()) {
                         var slnPath = slnProvider.Current;
                         RestorePackages(slnPath);
                         var extractMethodsFromSolution = ExtractMethodsFromSolution(slnPath);
-                        resultWriterToFile.Write(extractMethodsFromSolution, slnPath);
+                        resultWriter.Write(extractMethodsFromSolution, slnPath);
                     }
                     Console.WriteLine("...Waiting for 30 seconds...");
                     Thread.Sleep(30000); //download is slower than extraction.

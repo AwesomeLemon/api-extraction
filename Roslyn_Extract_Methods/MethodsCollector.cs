@@ -14,7 +14,7 @@ namespace Roslyn_Extract_Methods {
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node) {
 //            var syntaxTokenList = node.Modifiers;
 //            if (!syntaxTokenList.Select(t => t.Text.Equals("public")).Any()) return;
-            if (node.HasLeadingTrivia && node.HasStructuredTrivia && (node.Body != null)) MethodDecls.Add(node);
+            if (node.HasLeadingTrivia && (node.Body != null)) MethodDecls.Add(node);
         }
     }
 }

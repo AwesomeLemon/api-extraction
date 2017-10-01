@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Roslyn_Extract_Methods.Util;
 
 namespace Roslyn_Extract_Methods {
     internal class ApiSequenceExtractor : CSharpSyntaxWalker {
@@ -14,10 +15,12 @@ namespace Roslyn_Extract_Methods {
         }
 
         public List<ApiCall> Calls { get; } = new List<ApiCall>();
-//        public override void VisitVariableDeclarator(VariableDeclaratorSyntax node) {
-//            var type = model.GetTypeInfo(node.Initializer.Value).Type;
-//            Calls.Add(ApiCall.ofConstructor(type.Name));
-//        }
+
+        public string GetFullMethodName(MethodDeclarationSyntax methodNode) {
+            var declaredSymbol = _model.GetDeclaredSymbol(methodNode);
+            return declaredSymbol.ContainingSymbol.ToDisplayString() + "." + methodNode.Identifier.ToString();
+        }
+        
         public override void VisitObjectCreationExpression(ObjectCreationExpressionSyntax node) {
             try {
                 var ctorSymbol = _model.GetTypeInfo(node).Type;
@@ -34,6 +37,21 @@ namespace Roslyn_Extract_Methods {
           //      Console.ReadLine();
             }
         }
+        
+        private static string GetProperTypeName(ISymbol type) {
+            var displayFormat = new SymbolDisplayFormat(
+                SymbolDisplayGlobalNamespaceStyle.Included,
+                SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+                SymbolDisplayGenericsOptions.IncludeTypeConstraints,
+                miscellaneousOptions: SymbolDisplayMiscellaneousOptions.ExpandNullable
+            );
+            var displayString = type.ToDisplayString(displayFormat);
+            if (!displayString.Contains(".")) {
+                displayString = type.ContainingSymbol.ToDisplayString() + "." + displayString;
+            }
+
+            return displayString;
+        }
 
         public override void VisitInvocationExpression(InvocationExpressionSyntax node) {
             foreach (var argumentSyntax in node.ArgumentList.Arguments) {
@@ -43,7 +61,7 @@ namespace Roslyn_Extract_Methods {
                 var methodName = (IdentifierNameSyntax) node.Expression;
                 var method = _model.GetSymbolInfo(methodName).Symbol;
                 if (method == null || method.Name.StartsWith("_")) return;
-                Calls.Add(ApiCall.OfMethodInvocation(method.ContainingType.Name, method.Name));
+                Calls.Add(ApiCall.OfMethodInvocation(GetProperTypeName(method), method.Name));
                 UpdateLastCalledMethod(method);
             }
             else node.Expression.Accept(this);
@@ -92,13 +110,6 @@ namespace Roslyn_Extract_Methods {
             }
             _lastCalledMethod = "__oops__";
             //throw new NotImplementedException("Function called is something unaccounted for.");
-        }
-
-        private string GetProperTypeName(ISymbol type) {
-            var symbolDisplayFormat = new SymbolDisplayFormat(
-                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
-            
-            return type.ToDisplayString(symbolDisplayFormat);
         }
 
         public override void VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {

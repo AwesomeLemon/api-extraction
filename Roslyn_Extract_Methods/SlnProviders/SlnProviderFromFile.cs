@@ -14,7 +14,7 @@ namespace Roslyn_Extract_Methods.SlnProviders {
             int skippedCnt = 0;
             _processedNum = GetAlreadyProcessedNum();
             while (skippedCnt++ < _processedNum) {
-                Current = _slnFileReader.ReadLine();//not 'MoveNext', 'cause there processed counter is updated
+                Current = _slnFileReader.ReadLine();//not 'MoveNext', 'cause the processed counter is updated there
             }
         }
         
@@ -33,10 +33,11 @@ namespace Roslyn_Extract_Methods.SlnProviders {
 
         public bool MoveNext() {
             Current = _slnFileReader.ReadLine();
+            if (Current == null) return false;
             using (var sw = new StreamWriter(_fileProcessedSlnsCount)) {
-                sw.WriteLine(++_processedNum);
+//                sw.WriteLine(++_processedNum);
             }
-            return Current != null;
+            return true;
         }
 
         public void Reset() {

@@ -8,17 +8,23 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Roslyn_Extract_Methods {
     static class CommentExtractor {
-        public static Dictionary<MethodDeclarationSyntax, Tuple<string, string>> ExtractSummaryComments(
+        public static Dictionary<MethodDeclarationSyntax, Tuple<string, string, bool>> ExtractSummaryComments(
             List<MethodDeclarationSyntax> methodDeclarations) {
             var methodComments =
-                new Dictionary<MethodDeclarationSyntax, Tuple<string, string>>();
+                new Dictionary<MethodDeclarationSyntax, Tuple<string, string, bool>>();
 
             foreach (var method in methodDeclarations) {
                 var xmlTrivia = method.GetLeadingTrivia()
                     .Select(i => i.GetStructure())
                     .OfType<DocumentationCommentTriviaSyntax>()
                     .FirstOrDefault();
-                if (xmlTrivia == null) continue;
+                if (xmlTrivia == null) {
+                    var fullString = method.GetLeadingTrivia().ToFullString();
+                    if (!fullString.Contains("//")) continue;
+                    fullString = CleanString(fullString).Replace("//", "");
+                    methodComments[method] = new Tuple<string, string, bool>(fullString, null, false);
+                    continue;
+                }
                 var fullComment = xmlTrivia.Content.ToString();
                 if (fullComment.StartsWith(" <summary>\r\n\t\t/// Clean up any resources being used.")
                     || fullComment.StartsWith(
@@ -29,23 +35,28 @@ namespace Roslyn_Extract_Methods {
                     .OfType<XmlElementSyntax>()
                     .FirstOrDefault(i => i.StartTag.Name.ToString().Equals("summary"));
                 if (summary == null) {
-                    methodComments[method] = new Tuple<string, string>(fullComment, null);
+                    methodComments[method] = new Tuple<string, string, bool>(fullComment, null, true);
                     continue;
                 }
 
                 var stringComment = summary.Content.ToString();
-                stringComment = Regex.Replace(stringComment, @"\s+", " ", RegexOptions.Multiline).Replace("///", "")
-                    .Trim();
-                stringComment = CleanUpTags(stringComment);
-                stringComment = RemoveStuffWithinSuchBrackets(stringComment, '(', ')');
-                stringComment = RemoveStuffWithinSuchBrackets(stringComment, '[', ']');
-                stringComment = RemoveStuffWithinSuchBrackets(stringComment, '{', '}');
+                stringComment = CleanString(stringComment);
                 if (stringComment.Length < 3) {
                     continue;
                 }
-                methodComments[method] = new Tuple<string, string>(fullComment, stringComment);
+                methodComments[method] = new Tuple<string, string, bool>(fullComment, stringComment, true);
             }
             return methodComments;
+        }
+
+        private static string CleanString(string stringComment) {
+            stringComment = Regex.Replace(stringComment, @"\s+", " ", RegexOptions.Multiline).Replace("///", "")
+                .Trim();
+            stringComment = CleanUpTags(stringComment);
+            stringComment = RemoveStuffWithinSuchBrackets(stringComment, '(', ')');
+            stringComment = RemoveStuffWithinSuchBrackets(stringComment, '[', ']');
+            stringComment = RemoveStuffWithinSuchBrackets(stringComment, '{', '}');
+            return stringComment;
         }
 
         public static string CleanUpTags(string input) {
