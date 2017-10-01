@@ -20,6 +20,41 @@ namespace Roslyn_Extract_Methods {
 
         private static Dictionary<MethodDeclarationSyntax, Tuple<Tuple<string, string>, List<ApiCall>>> ExtractMethodsFromSolution(
             string solutionPath) {
+            Solution solution = BuildSolution(solutionPath);
+            if (solution == null) {
+                return new Dictionary<MethodDeclarationSyntax, Tuple<Tuple<string, string>, List<ApiCall>>>();
+            }
+            Console.WriteLine("Solution was build");
+            var res = new Dictionary<MethodDeclarationSyntax, Tuple<Tuple<string, string>, List<ApiCall>>>();
+            foreach (var project in solution.Projects) {
+                foreach (var document in project.Documents) {
+                    if (!File.Exists(document.FilePath)) {
+                        Console.WriteLine("File doesn't exist: ");
+                        Console.WriteLine(document.FilePath);
+                        continue;
+                    }
+                    Console.WriteLine("Working with " + document.FilePath);
+                    
+                    var rootNode = document.GetSyntaxRootAsync().Result;
+                    var methodCollector = new MethodsCollector();
+                    methodCollector.Visit(rootNode);
+                    
+                    var methodsAndComments = CommentExtractor.ExtractSummaryComments(methodCollector.MethodDecls);
+                    var curMethods = methodsAndComments.Keys.ToList();
+                    
+                    var model = document.GetSemanticModelAsync().Result;
+                    foreach (var method in curMethods) {
+                        var extractedApiSequences = ExtractApiSequence(method, model);
+                        if (extractedApiSequences.Count == 0) continue;
+                        res.Add(method,
+                            new Tuple<Tuple<string, string>, List<ApiCall>>(methodsAndComments[method], extractedApiSequences));
+                    }
+                }
+            }
+            return res;
+        }
+
+        private static Solution BuildSolution(string solutionPath) {
             var workspace = MSBuildWorkspace.Create();
             Solution solution;
             try {
@@ -32,33 +67,9 @@ namespace Roslyn_Extract_Methods {
                     sw.WriteLine(0);
                     sw.WriteLine(e.ToString());
                 }
-                return new Dictionary<MethodDeclarationSyntax, Tuple<Tuple<string, string>, List<ApiCall>>>();
+                return null;
             }
-            Console.WriteLine("got here");
-            var res = new Dictionary<MethodDeclarationSyntax, Tuple<Tuple<string, string>, List<ApiCall>>>();
-            foreach (var project in solution.Projects) {
-                foreach (var document in project.Documents) {
-                    if (!File.Exists(document.FilePath)) {
-                        Console.WriteLine(document.FilePath);
-                        continue;
-                    }
-                    Console.WriteLine("Working with " + document.FilePath);
-                    var rootNode = document.GetSyntaxRootAsync().Result;
-
-                    var methodCollector = new MethodsCollector();
-                    methodCollector.Visit(rootNode);
-                    var methodsAndComments = CommentExtractor.ExtractSummaryComments(methodCollector.MethodDecls);
-                    var curMethods = methodsAndComments.Keys.ToList();
-                    var model = document.GetSemanticModelAsync().Result;
-                    foreach (var method in curMethods) {
-                        var extractedApiSequences = ExtractApiSequence(method, model);
-                        if (extractedApiSequences.Count == 0) continue;
-                        res.Add(method,
-                            new Tuple<Tuple<string, string>, List<ApiCall>>(methodsAndComments[method], extractedApiSequences));
-                    }
-                }
-            }
-            return res;
+            return solution;
         }
 
         private static string _pathToSlnFile = @"D:\DeepApiReps\slns22.txt";

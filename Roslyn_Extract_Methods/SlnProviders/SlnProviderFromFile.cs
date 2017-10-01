@@ -40,7 +40,7 @@ namespace Roslyn_Extract_Methods.SlnProviders {
         }
 
         public void Reset() {
-            throw new System.NotImplementedException();
+            throw new System.NotSupportedException();
         }
 
         object IEnumerator.Current => Current;
