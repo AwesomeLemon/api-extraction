@@ -81,7 +81,7 @@ namespace Roslyn_Extract_Methods {
         private static void Main(string[] args) {
             if (!ParseArgs(args)) return;
             
-            var resultWriter = new ResultWriters.ResultWriterToDatabase("D:\\YandexDisk\\mydb");//new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
+            var resultWriter = new ResultWriters.ResultWriterToDatabase("D:\\hubic\\mydb");//new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
             using (var slnProvider = new SlnProviderFromFile(_pathToSlnFile, FileProcessedSlnsCount)) {
                 while (true) {
                     while (slnProvider.MoveNext()) {

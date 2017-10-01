@@ -8,7 +8,7 @@ using static Roslyn_Extract_Methods.Util;
 namespace Roslyn_Extract_Methods {
     internal class ApiSequenceExtractor : CSharpSyntaxWalker {
         private readonly SemanticModel _model;
-        private string _lastCalledMethod;
+        private string _lastCalledMethodReturnType;
 
         public ApiSequenceExtractor(SemanticModel model) {
             _model = model;
@@ -29,15 +29,23 @@ namespace Roslyn_Extract_Methods {
                         argumentSyntax.Accept(this);
                     }
                 }
-                Calls.Add(ApiCall.OfConstructor(ctorSymbol.Name));
+                var properTypeName = GetProperTypeName(ctorSymbol);
+                Calls.Add(ApiCall.OfConstructor(properTypeName));
+                _lastCalledMethodReturnType = properTypeName;
             }
             catch (Exception e) {
                 Console.WriteLine(e.Message);
-             //   node.Accept(this);
-          //      Console.ReadLine();
             }
         }
-        
+
+        public override void VisitUsingStatement(UsingStatementSyntax node) {
+            Visit(node.Declaration);
+            var typeInUsing = _lastCalledMethodReturnType;
+            Visit(node.Expression);
+            Visit(node.Statement);
+            Calls.Add(ApiCall.OfMethodInvocation(typeInUsing, "Dispose"));
+        }
+
         private static string GetProperTypeName(ISymbol type) {
             var displayFormat = new SymbolDisplayFormat(
                 SymbolDisplayGlobalNamespaceStyle.Omitted,
@@ -81,34 +89,34 @@ namespace Roslyn_Extract_Methods {
 
         private void UpdateLastCalledMethod(ISymbol method) {
             if (method == null) {
-                _lastCalledMethod = null;
+                _lastCalledMethodReturnType = null;
                 return;
             }
             if (method is IMethodSymbol) {
-                _lastCalledMethod = GetProperTypeName(((IMethodSymbol) method).ReturnType);
+                _lastCalledMethodReturnType = GetProperTypeName(((IMethodSymbol) method).ReturnType);
                 return;
             }
             if (method is IPropertySymbol) {
-                _lastCalledMethod = GetProperTypeName(((IPropertySymbol) method).Type);
+                _lastCalledMethodReturnType = GetProperTypeName(((IPropertySymbol) method).Type);
                 return;
             }
             if (method is IFieldSymbol) {
-                _lastCalledMethod = GetProperTypeName(((IFieldSymbol) method).Type);
+                _lastCalledMethodReturnType = GetProperTypeName(((IFieldSymbol) method).Type);
                 return;
             }
             if (method is IEventSymbol) {
-                _lastCalledMethod = GetProperTypeName(((IEventSymbol) method).Type);
+                _lastCalledMethodReturnType = GetProperTypeName(((IEventSymbol) method).Type);
                 return;
             }
             if (method is IParameterSymbol) {
-                _lastCalledMethod = GetProperTypeName(((IParameterSymbol) method).Type);
+                _lastCalledMethodReturnType = GetProperTypeName(((IParameterSymbol) method).Type);
                 return;
             }
             if (method is ILocalSymbol) {
-                _lastCalledMethod = GetProperTypeName(((ILocalSymbol) method).Type);
+                _lastCalledMethodReturnType = GetProperTypeName(((ILocalSymbol) method).Type);
                 return;
             }
-            _lastCalledMethod = "__oops__";
+            _lastCalledMethodReturnType = "__oops__";
             //throw new NotImplementedException("Function called is something unaccounted for.");
         }
 
@@ -138,8 +146,8 @@ namespace Roslyn_Extract_Methods {
                 var invocationSyntax = (InvocationExpressionSyntax) node.Expression;
                 invocationSyntax.Accept(this);
                 //TODO: DANGER! I assume that the true last called method is stored
-                if (_lastCalledMethod == null) return;
-                Calls.Add(ApiCall.OfMethodInvocation(_lastCalledMethod, method.Name));
+                if (_lastCalledMethodReturnType == null) return;
+                Calls.Add(ApiCall.OfMethodInvocation(_lastCalledMethodReturnType, method.Name));
                 UpdateLastCalledMethod(method);
                 return;
             }
@@ -165,7 +173,7 @@ namespace Roslyn_Extract_Methods {
                 string type;
                 if (tryType.Equals(null)) {
                     memberSyntax.Accept(this);
-                    type = _lastCalledMethod;
+                    type = _lastCalledMethodReturnType;
                 }
                 else type = GetProperTypeName(tryType.Type);
                 
@@ -199,7 +207,7 @@ namespace Roslyn_Extract_Methods {
                 var parenSyntax = (ParenthesizedExpressionSyntax) node.Expression;
                 parenSyntax.Expression.Accept(this);
                 //TODO: danger with last called method
-                var type = _lastCalledMethod;
+                var type = _lastCalledMethodReturnType;
                 
                 Calls.Add(ApiCall.OfMethodInvocation(type, method.Name));
                 UpdateLastCalledMethod(method);
