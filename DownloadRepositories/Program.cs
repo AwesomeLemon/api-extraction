@@ -28,52 +28,43 @@ namespace DownloadRepositories {
                 StartPeriodicAutomaticDeletion();
             }
 
-            int toSkipNum = GetAlreadyProcessedNum();
 //            IRepoUrlProvider repoUrlProvider = new RepoUrlProviderFromFile(_fileWithUrls, toSkipNum);
+            //            ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
             IRepoUrlProvider repoUrlProvider = new RepoUrlProviderFromDatabase(@"D:\hubic\mydb");
-//            ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
-            ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
+            ISlnWriter slnWriter = new SlnWriterToDatabase(@"D:\hubic\mydb");
             
             var nextUrl = repoUrlProvider.GetNextUrl();
-            while (nextUrl != null) {
-                try {
-                    string curRepUrlClone = nextUrl;
-                    var ownerAndName = ExtractNameAndOwnerFromUrl(curRepUrlClone);
+            try {
+                while (nextUrl != null) {
+                    try {
+                        string curRepUrlClone = nextUrl;
+                        var ownerAndName = ExtractNameAndOwnerFromUrl(curRepUrlClone);
 
-                    var repPath = _pathForCloning + ownerAndName.Replace('/', '_');
-                    CloneRepository(curRepUrlClone, repPath);
+                        var repPath = _pathForCloning + ownerAndName.Replace('/', '_');
+                        CloneRepository(curRepUrlClone, repPath);
 
-                    Task.Factory.StartNew(() => {
-                        slnWriter.Write(Directory.EnumerateFiles(repPath, "*.sln", SearchOption.AllDirectories));
-                    });
-                }
-                catch (Exception e) when (
-                    e is Octokit.ApiException ||
-                    e is AggregateException ||
-                    e is DirectoryNotFoundException) {
-                    Console.WriteLine(e + "\n" + e.StackTrace);
-                    using (var logFile = new StreamWriter(logFilePath, true)) {
-                        logFile.WriteLine(3 + "\n" + e);
+                        Task.Factory.StartNew(() => {
+                            slnWriter.Write(Directory.EnumerateFiles(repPath, "*.sln", SearchOption.AllDirectories));
+                        });
                     }
-                }
-                finally {
-                    using (var processedRepsFile = new StreamWriter(FileProcessedRepsCount)) {
-                        processedRepsFile.WriteLine(++toSkipNum);
+                    catch (Exception e) when (
+                        e is Octokit.ApiException ||
+                        e is AggregateException ||
+                        e is DirectoryNotFoundException) {
+                        Console.WriteLine(e + "\n" + e.StackTrace);
+                        using (var logFile = new StreamWriter(logFilePath, true)) {
+                            logFile.WriteLine(3 + "\n" + e);
+                        }
                     }
+                    nextUrl = repoUrlProvider.GetNextUrl();
                 }
-
-                nextUrl = repoUrlProvider.GetNextUrl();
+            }
+            finally {
+                repoUrlProvider.Dispose();
             }
         }
 
-        private static int GetAlreadyProcessedNum() {
-            int toSkipNum;
-            if (!File.Exists(FileProcessedRepsCount)) File.Create(FileProcessedRepsCount).Close();
-            using (var sr = new StreamReader(FileProcessedRepsCount)) {
-                toSkipNum = int.Parse(sr.ReadLine() ?? "0");
-            }
-            return toSkipNum;
-        }
+        
 
         private static bool ParseArgs(string[] args) {
             var p = new OptionSet() {
