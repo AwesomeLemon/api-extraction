@@ -160,7 +160,6 @@
     <Compile Include="ResultWriters\ResultWriterToFile.cs" />
     <Compile Include="SlnProviders\SlnProviderFromFile.cs" />
     <Compile Include="SlnProviders\ISlnProvider.cs" />
-    <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
