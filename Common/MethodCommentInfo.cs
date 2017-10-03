@@ -1,4 +1,4 @@
-﻿namespace Roslyn_Extract_Methods {
+﻿namespace Common {
     public class MethodCommentInfo {
         public string FullComment { get; }
         public string FirstSentence { get; }

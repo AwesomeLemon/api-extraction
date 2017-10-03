@@ -1,7 +1,7 @@
 ﻿using System;
 using SQLite;
 
-namespace Roslyn_Extract_Methods.Database {
+namespace Common.Database {
     public class Method {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }

@@ -4,13 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Common.Database;
 using DownloadRepositories.SlnWriters;
 using DownloadRepositories.UrlProviders;
 using NDesk.Options;
 
 namespace DownloadRepositories {
     class Program {
-        private static string _fileWithUrls = @"D:\DeepApiReps\reps_refactored_new.txt";
+        private static string _fileWithUrls = @"D:\DeepApiReps\again_reps_max.txt";
         private static string _pathForCloning = @"D:\DeepApiReps\";
         private static string _pathToSlnFile = @"D:\DeepApiReps\slns2.txt";
 
@@ -28,7 +29,7 @@ namespace DownloadRepositories {
             }
 
             int toSkipNum = GetAlreadyProcessedNum();
-            IRepoUrlProvider repoUrlProvider = new RepoUrlProvider(_fileWithUrls, toSkipNum);
+            IRepoUrlProvider repoUrlProvider = new RepoUrlProviderFromFile(_fileWithUrls, toSkipNum);
             ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
             
             var nextUrl = repoUrlProvider.GetNextUrl();
@@ -45,7 +46,7 @@ namespace DownloadRepositories {
                     });
                 }
                 catch (Exception e) when (
-                    e is LibGit2Sharp.LibGit2SharpException ||
+//                    e is LibGit2Sharp.LibGit2SharpException ||
                     e is Octokit.ApiException ||
                     e is AggregateException ||
                     e is DirectoryNotFoundException) {

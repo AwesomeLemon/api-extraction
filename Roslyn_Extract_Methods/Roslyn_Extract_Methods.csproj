@@ -152,9 +152,6 @@
     <Compile Include="ApiCall.cs" />
     <Compile Include="ApiSequenceExtractor.cs" />
     <Compile Include="CommentExtractor.cs" />
-    <Compile Include="Database\MethodParameter.cs" />
-    <Compile Include="Database\Method.cs" />
-    <Compile Include="MethodCommentInfo.cs" />
     <Compile Include="ProgramParseSolution.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MethodsCollector.cs" />

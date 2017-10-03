@@ -1,10 +1,10 @@
 ﻿using System.IO;
 
 namespace DownloadRepositories.UrlProviders {
-    public class RepoUrlProvider : IRepoUrlProvider {
+    public class RepoUrlProviderFromFile : IRepoUrlProvider {
         private readonly StreamReader _urlFileReader;
 
-        public RepoUrlProvider(string FileWithUrls, int toSkipCount) {
+        public RepoUrlProviderFromFile(string FileWithUrls, int toSkipCount) {
             _urlFileReader = new StreamReader(FileWithUrls);
             int skippedCounter = 0;
             string curRepUrlClone, ownerAndNameStr, curRepUrlApi;
