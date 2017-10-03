@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using Common.Database;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Roslyn_Extract_Methods.Database;
 
 namespace Roslyn_Extract_Methods {
     internal class ApiSequenceExtractor : CSharpSyntaxWalker {

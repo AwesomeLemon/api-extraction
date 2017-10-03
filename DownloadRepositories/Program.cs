@@ -29,7 +29,9 @@ namespace DownloadRepositories {
             }
 
             int toSkipNum = GetAlreadyProcessedNum();
-            IRepoUrlProvider repoUrlProvider = new RepoUrlProviderFromFile(_fileWithUrls, toSkipNum);
+//            IRepoUrlProvider repoUrlProvider = new RepoUrlProviderFromFile(_fileWithUrls, toSkipNum);
+            IRepoUrlProvider repoUrlProvider = new RepoUrlProviderFromDatabase(@"D:\hubic\mydb");
+//            ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
             ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
             
             var nextUrl = repoUrlProvider.GetNextUrl();
@@ -46,7 +48,6 @@ namespace DownloadRepositories {
                     });
                 }
                 catch (Exception e) when (
-//                    e is LibGit2Sharp.LibGit2SharpException ||
                     e is Octokit.ApiException ||
                     e is AggregateException ||
                     e is DirectoryNotFoundException) {

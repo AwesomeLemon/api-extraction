@@ -4,12 +4,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Common;
+using Common.Database;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
 using NDesk.Options;
-using Roslyn_Extract_Methods.Database;
 using Roslyn_Extract_Methods.SlnProviders;
+using Solution = Microsoft.CodeAnalysis.Solution;
 
 namespace Roslyn_Extract_Methods {
     internal class ProgramParseSolution {

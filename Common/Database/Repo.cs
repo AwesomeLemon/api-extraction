@@ -10,6 +10,8 @@ namespace Common.Database {
         public int Forks { get; set; }
         public int Watchers { get; set; }
         public DateTime? ProcessedTime { get; set; }
+        
+        public Repo() {}
 
         public Repo(string url, int stars, int forks, int watchers) {
             Url = url;

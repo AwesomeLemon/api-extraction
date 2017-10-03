@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Roslyn_Extract_Methods.Database;
+using Common;
+using Common.Database;
 
 namespace Roslyn_Extract_Methods.ResultWriters {
     class ResultWriterToFile : IResultWriter {

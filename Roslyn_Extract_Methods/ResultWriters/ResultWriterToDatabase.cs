@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Roslyn_Extract_Methods.Database;
+using Common;
+using Common.Database;
 using SQLite;
 
 namespace Roslyn_Extract_Methods.ResultWriters {
