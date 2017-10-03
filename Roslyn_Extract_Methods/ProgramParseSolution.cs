@@ -91,7 +91,8 @@ namespace Roslyn_Extract_Methods {
             var resultWriter =
                 new ResultWriters.ResultWriterToDatabase(
                     "D:\\hubic\\mydb"); //new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
-            using (var slnProvider = new SlnProviderFromFile(_pathToSlnFile, FileProcessedSlnsCount)) {
+//            using (var slnProvider = new SlnProviderFromFile(_pathToSlnFile, FileProcessedSlnsCount)) {
+            using (var slnProvider = new SlnProviderFromDatabase("D:\\hubic\\mydb")) {
                 while (true) {
                     while (slnProvider.MoveNext()) {
                         var slnPath = slnProvider.Current;

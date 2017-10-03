@@ -13,5 +13,9 @@ namespace Common.Database {
         public DateTime? ProcessedTime { get; set; }
         [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<Method> Methods { get; set; }
+
+        public Solution() {
+            
+        }
     }
 }
