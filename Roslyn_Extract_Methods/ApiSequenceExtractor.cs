@@ -62,7 +62,7 @@ namespace Roslyn_Extract_Methods {
                 miscellaneousOptions: SymbolDisplayMiscellaneousOptions.ExpandNullable
             );
             var displayString = type.ToDisplayString(displayFormat);
-            if (!displayString.Contains(".")) {
+            if (!displayString.Contains(".") && type.ContainingSymbol != null) {
                 displayString = type.ContainingSymbol.ToDisplayString();
             }
 
