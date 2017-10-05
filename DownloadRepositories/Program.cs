@@ -8,6 +8,7 @@ using Common.Database;
 using DownloadRepositories.SlnWriters;
 using DownloadRepositories.UrlProviders;
 using NDesk.Options;
+using SQLite;
 
 namespace DownloadRepositories {
     class Program {
@@ -30,8 +31,9 @@ namespace DownloadRepositories {
 
 //            IRepoUrlProvider repoUrlProvider = new RepoUrlProviderFromFile(_fileWithUrls, toSkipNum);
             //            ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
-            IRepoUrlProvider repoUrlProvider = new RepoUrlProviderFromDatabase(@"D:\hubic\mydb");
-            ISlnWriter slnWriter = new SlnWriterToDatabase(@"D:\hubic\mydb");
+            var sqLiteConnection = new SQLiteConnection(@"D:\hubic\mydb");
+            RepoUrlProviderFromDatabase repoUrlProvider = new RepoUrlProviderFromDatabase(sqLiteConnection);
+            SlnWriterToDatabase slnWriter = new SlnWriterToDatabase(sqLiteConnection);
             
             var nextUrl = repoUrlProvider.GetNextUrl();
             try {
@@ -44,7 +46,7 @@ namespace DownloadRepositories {
                         CloneRepository(curRepUrlClone, repPath);
 
                         Task.Factory.StartNew(() => {
-                            slnWriter.Write(Directory.EnumerateFiles(repPath, "*.sln", SearchOption.AllDirectories));
+                            slnWriter.Write(Directory.EnumerateFiles(repPath, "*.sln", SearchOption.AllDirectories), repoUrlProvider.GetCurRepoId());
                         });
                     }
                     catch (Exception e) when (

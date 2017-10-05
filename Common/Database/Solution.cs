@@ -17,5 +17,11 @@ namespace Common.Database {
         public Solution() {
             
         }
+
+        public Solution(int repoId, string path) {
+            RepoId = repoId;
+            Path = path;
+            ProcessedTime = null;
+        }
     }
 }

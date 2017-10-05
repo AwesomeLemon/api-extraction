@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
 using NDesk.Options;
 using Roslyn_Extract_Methods.SlnProviders;
+using SQLite;
 using Solution = Microsoft.CodeAnalysis.Solution;
 
 namespace Roslyn_Extract_Methods {
@@ -88,9 +89,10 @@ namespace Roslyn_Extract_Methods {
         private static void Main(string[] args) {
             if (!ParseArgs(args)) return;
 
+            var sqLiteConnection = new SQLiteConnection("D:\\hubic\\mydb");
             var resultWriter =
-                new ResultWriters.ResultWriterToDatabase(
-                    "D:\\hubic\\mydb"); //new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
+                new ResultWriters.ResultWriterToDatabase(sqLiteConnection); 
+            //new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
 //            using (var slnProvider = new SlnProviderFromFile(_pathToSlnFile, FileProcessedSlnsCount)) {
             using (var slnProvider = new SlnProviderFromDatabase("D:\\hubic\\mydb")) {
                 while (true) {
@@ -98,7 +100,10 @@ namespace Roslyn_Extract_Methods {
                         var slnPath = slnProvider.Current;
                         RestorePackages(slnPath);
                         var extractMethodsFromSolution = ExtractMethodsFromSolution(slnPath);
-                        resultWriter.Write(extractMethodsFromSolution, slnPath);
+                        var curSolution = slnProvider.GetCurSolution();
+                        resultWriter.Write(extractMethodsFromSolution, slnPath, curSolution);
+                        curSolution.ProcessedTime = DateTime.Now;
+                        sqLiteConnection.Update(curSolution);
                     }
                     Console.WriteLine("...Waiting for 30 seconds...");
                     Thread.Sleep(30000); //download is slower than extraction.

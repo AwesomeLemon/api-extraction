@@ -14,11 +14,18 @@ namespace Roslyn_Extract_Methods.SlnProviders {
             _sqLiteConnection.Dispose();
         }
 
+        private Solution _curSolution;
+
         public bool MoveNext() {
             var curSolution = _sqLiteConnection.Table<Solution>().FirstOrDefault(sln => sln.ProcessedTime == null);
             if (curSolution == null) return false;
             Current = curSolution.Path;
+            _curSolution = curSolution;
             return true;
+        }
+
+        public Solution GetCurSolution() {
+            return _curSolution;
         }
 
         public void Reset() {
