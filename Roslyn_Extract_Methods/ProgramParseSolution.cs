@@ -24,15 +24,15 @@ namespace Roslyn_Extract_Methods {
                 extractor.Calls, extractor.MethodParameters);
         }
 
-        private static Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>, List<MethodParameter>>>
+        private static List<Tuple<string, MethodCommentInfo, List<ApiCall>, List<MethodParameter>>>
             ExtractMethodsFromSolution(
                 string solutionPath) {
             Solution solution = BuildSolution(solutionPath);
             if (solution == null) {
-                return new Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>, List<MethodParameter>>>();
+                return new List<Tuple<string, MethodCommentInfo, List<ApiCall>, List<MethodParameter>>>();
             }
             Console.WriteLine("Solution was build");
-            var res = new Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>, List<MethodParameter>>>();
+            var res = new List<Tuple<string, MethodCommentInfo, List<ApiCall>, List<MethodParameter>>>();
             foreach (var project in solution.Projects) {
                 foreach (var document in project.Documents) {
                     if (!File.Exists(document.FilePath)) {
@@ -53,9 +53,9 @@ namespace Roslyn_Extract_Methods {
                     foreach (var method in curMethods) {
                         var methodNameAndCalls = ExtractApiSequence(method, model);
                         if (methodNameAndCalls.Item2.Count == 0) continue;
-                        res.Add(methodNameAndCalls.Item1,
-                            new Tuple<MethodCommentInfo, List<ApiCall>, List<MethodParameter>>(
-                                methodsAndComments[method], methodNameAndCalls.Item2, methodNameAndCalls.Item3));
+                        res.Add(new Tuple<string, MethodCommentInfo, List<ApiCall>, List<MethodParameter>>(
+                            methodNameAndCalls.Item1, methodsAndComments[method], methodNameAndCalls.Item2,
+                            methodNameAndCalls.Item3));
                     }
                 }
             }

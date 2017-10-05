@@ -16,16 +16,16 @@ namespace Roslyn_Extract_Methods.ResultWriters {
         }
 
         public void Write(
-            Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>, List<MethodParameter>>> methodsCommentsCalls,
+            List<Tuple<string, MethodCommentInfo, List<ApiCall>, List<MethodParameter>>> methodsTupleData,
             string slnPath, Solution curSolution) {
             var methodsInDatabase = new List<Method>();
-            foreach (var keyValuePair in methodsCommentsCalls) {
-                var methodName = keyValuePair.Key;
-                var methodCommentInfo = keyValuePair.Value.Item1;
-                var apiCallsString = string.Join(" ", keyValuePair.Value.Item2.Select(x => x.ToString()));
+            foreach (var data in methodsTupleData) {
+                var methodName = data.Item1;
+                var methodCommentInfo = data.Item2;
+                var apiCallsString = string.Join(" ", data.Item3.Select(x => x.ToString()));
                 var method = new Method(methodName, apiCallsString, methodCommentInfo);
                 _sqLiteConnection.Insert(method);
-                List<MethodParameter> methodParameters = keyValuePair.Value.Item3;
+                List<MethodParameter> methodParameters = data.Item4;
                 foreach (var methodParameter in methodParameters) {
                     methodParameter.MethodId = method.Id;
                 }
