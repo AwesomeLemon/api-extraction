@@ -20,7 +20,7 @@ namespace DownloadRepositories {
         private static readonly string logFilePath = "exceptions.txt";
         private static int _foldersToLeave = 500;
         private static bool _autoDeleteEnabled = true;
-        private static string DatabasePath = @"D:\hubic\mydb";
+        private static string DatabasePath = @"D:\hubic\DeepApi#";
         private static string _fileWithUrls = @"D:\DeepApiReps\again_reps_max.txt";
 
         static void Main(string[] args) {
@@ -31,7 +31,7 @@ namespace DownloadRepositories {
             }
 //            IRepoUrlProvider repoUrlProvider = new RepoUrlProviderFromFile(_fileWithUrls, toSkipNum);
             //            ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
-            var sqLiteConnection = new SQLiteConnection(DatabasePath);
+            var sqLiteConnection = new SQLiteConnection(DatabasePath) {BusyTimeout = TimeSpan.FromSeconds(60)};
             RepoUrlProviderFromDatabase repoUrlProvider = new RepoUrlProviderFromDatabase(_fileWithUrls, sqLiteConnection);
             SlnWriterToDatabase slnWriter = new SlnWriterToDatabase(sqLiteConnection);
             

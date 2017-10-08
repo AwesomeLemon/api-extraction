@@ -5,7 +5,7 @@ using SQLite;
 
 namespace DownloadRepositories.UrlProviders {
     public class RepoUrlProviderFromDatabase : IRepoUrlProvider {
-        private Repo _curRepo = null;
+        private Repo _curRepo;
 
         public string GetNextUrl() {
             if (_curRepo != null) {
@@ -23,8 +23,9 @@ namespace DownloadRepositories.UrlProviders {
 
         public RepoUrlProviderFromDatabase(string fileWithUrls, SQLiteConnection sqLiteConnection) {
             _sqLiteConnection = sqLiteConnection;
-            var repoQuery = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='Repo';";
-            bool repoTableExists = _sqLiteConnection.ExecuteScalar<int>( repoQuery ) == 1;
+            var repoQuery = "SELECT count(tbl_name) FROM sqlite_master WHERE type='table' AND name='Repo';";
+            var count = _sqLiteConnection.ExecuteScalar<int>( repoQuery );
+            bool repoTableExists = count == 1;
             if (!repoTableExists) {
                 new RepoIntoDatabaseInserter(_sqLiteConnection).InsertReposIntoDatabaseFromFile(fileWithUrls);
             }

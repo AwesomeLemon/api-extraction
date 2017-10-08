@@ -29,7 +29,9 @@ namespace Common {
                     } while (sr.ReadLine() != null);
                 }
             });
-            _sqLiteConnection.Close();
+            _sqLiteConnection.Execute(
+                "DELETE FROM repo WHERE rowid NOT IN (SELECT min(rowid) FROM repo GROUP BY url);");
+//            _sqLiteConnection.Close();
         }
 
         private static Repo GetNextRepoFromFile(StreamReader sr) {

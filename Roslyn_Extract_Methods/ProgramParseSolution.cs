@@ -86,7 +86,7 @@ namespace Roslyn_Extract_Methods {
 
         private static readonly string FileProcessedSlnsCount = "sln_num.txt";
         private static readonly string LogFilePath = "exceptions.txt";
-        private static readonly string DatabasePath = "D:\\hubic\\mydb";
+        private static readonly string DatabasePath = @"D:\hubic\DeepApi#";
 
         private static void Main(string[] args) {
             
