@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Common;
 using Common.Database;
 using DownloadRepositories.SlnWriters;
 using DownloadRepositories.UrlProviders;
@@ -12,7 +13,6 @@ using SQLite;
 
 namespace DownloadRepositories {
     class Program {
-        private static string _fileWithUrls = @"D:\DeepApiReps\again_reps_max.txt";
         private static string _pathForCloning = @"D:\DeepApiReps\";
         private static string _pathToSlnFile = @"D:\DeepApiReps\slns2.txt";
 
@@ -20,18 +20,17 @@ namespace DownloadRepositories {
         private static readonly string logFilePath = "exceptions.txt";
         private static int _foldersToLeave = 500;
         private static bool _autoDeleteEnabled = true;
+        private static string DatabasePath = @"D:\hubic\mydb";
 
         static void Main(string[] args) {
             var parsedArgsSuccessful = ParseArgs(args);
             if (!parsedArgsSuccessful) return;
-
             if (_autoDeleteEnabled) {
                 StartPeriodicAutomaticDeletion();
             }
-
 //            IRepoUrlProvider repoUrlProvider = new RepoUrlProviderFromFile(_fileWithUrls, toSkipNum);
             //            ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
-            var sqLiteConnection = new SQLiteConnection(@"D:\hubic\mydb");
+            var sqLiteConnection = new SQLiteConnection(DatabasePath);
             RepoUrlProviderFromDatabase repoUrlProvider = new RepoUrlProviderFromDatabase(sqLiteConnection);
             SlnWriterToDatabase slnWriter = new SlnWriterToDatabase(sqLiteConnection);
             
@@ -70,7 +69,7 @@ namespace DownloadRepositories {
 
         private static bool ParseArgs(string[] args) {
             var p = new OptionSet() {
-                {"urls=", "Path to input file with urls of repos", x => _fileWithUrls = x},
+//                {"urls=", "Path to input file with urls of repos", x => _fileWithUrls = x},
                 {"clonepath=", "Path for cloning", x => _pathForCloning = x},
                 {"slns=", "Path to output file with paths of .sln files", x => _pathToSlnFile = x},
             };

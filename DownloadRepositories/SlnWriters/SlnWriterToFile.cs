@@ -2,7 +2,7 @@
 using System.IO;
 
 namespace DownloadRepositories.SlnWriters {
-    public class SlnWriterToFile : ISlnWriter {
+    public class SlnWriterToFile {
         private readonly StreamWriter _slnFileWriter; 
         
         public SlnWriterToFile(string slnFilePath) {

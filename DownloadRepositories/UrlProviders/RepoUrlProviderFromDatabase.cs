@@ -10,10 +10,8 @@ namespace DownloadRepositories.UrlProviders {
                 _curRepo.ProcessedTime = DateTime.Now;
                 _sqLiteConnection.Update(_curRepo);
             }
-            var curRepo = _sqLiteConnection.Get<Repo>(repo => repo.ProcessedTime == null);
-            _curRepo = curRepo;
-            return curRepo.Url;
-//            return _sqLiteConnection.Table<Repo>().Where(repo => repo.ProcessedTime == null).Take(10);
+            _curRepo = _sqLiteConnection.Get<Repo>(repo => repo.ProcessedTime == null);
+            return _curRepo.Url;
         }
 
         public int GetCurRepoId() {
