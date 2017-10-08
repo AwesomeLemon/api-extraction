@@ -5,6 +5,6 @@ using Common.Database;
 
 namespace Roslyn_Extract_Methods.ResultWriters {
     interface IResultWriter {
-        void Write(Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>, List<MethodParameter>>> methodsCommentsCalls, string slnPath);
+        void Write(List<Tuple<string, MethodCommentInfo, List<ApiCall>, List<MethodParameter>>> methodsTupleData, string slnPath);
     }
 }

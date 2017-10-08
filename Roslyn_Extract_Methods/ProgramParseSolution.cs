@@ -87,12 +87,15 @@ namespace Roslyn_Extract_Methods {
         private static readonly string LogFilePath = "exceptions.txt";
 
         private static void Main(string[] args) {
+            
             if (!ParseArgs(args)) return;
 
-            var sqLiteConnection = new SQLiteConnection("D:\\hubic\\mydb");
+            var sqLiteConnection = new SQLiteAsyncConnection("D:\\hubic\\mydb");
+//            var solution = sqLiteConnection.Table<Common.Database.Solution>().Where(sln => sln.ProcessedTime != null).FirstAsync().Result;
+//            return;
             var resultWriter =
                 new ResultWriters.ResultWriterToDatabase(sqLiteConnection); 
-            //new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
+//            new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
 //            using (var slnProvider = new SlnProviderFromFile(_pathToSlnFile, FileProcessedSlnsCount)) {
             using (var slnProvider = new SlnProviderFromDatabase("D:\\hubic\\mydb")) {
                 while (true) {
@@ -101,9 +104,10 @@ namespace Roslyn_Extract_Methods {
                         RestorePackages(slnPath);
                         var extractMethodsFromSolution = ExtractMethodsFromSolution(slnPath);
                         var curSolution = slnProvider.GetCurSolution();
-                        resultWriter.Write(extractMethodsFromSolution, slnPath, curSolution);
+//                        resultWriter.Write(extractMethodsFromSolution, slnPath);
                         curSolution.ProcessedTime = DateTime.Now;
-                        sqLiteConnection.Update(curSolution);
+                        var notAsync = sqLiteConnection.UpdateAsync(curSolution).Result;
+                        resultWriter.Write(extractMethodsFromSolution, slnPath, curSolution);
                     }
                     Console.WriteLine("...Waiting for 30 seconds...");
                     Thread.Sleep(30000); //download is slower than extraction.

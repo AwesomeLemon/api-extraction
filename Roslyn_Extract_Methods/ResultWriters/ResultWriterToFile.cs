@@ -13,13 +13,15 @@ namespace Roslyn_Extract_Methods.ResultWriters {
             _extractedDataWriter.AutoFlush = true;
         }
 
-        public void Write(Dictionary<string, Tuple<MethodCommentInfo, List<ApiCall>, List<MethodParameter>>> methodsCommentsCalls, string slnPath) {
+        public void Write(List<Tuple<string, MethodCommentInfo, List<ApiCall>, List<MethodParameter>>> methodsTupleData,
+            string slnPath) {
             _extractedDataWriter.WriteLine("**" + slnPath);
-            foreach (var keyValuePair in methodsCommentsCalls) {
-                _extractedDataWriter.WriteLine("//" + keyValuePair.Key);
-                _extractedDataWriter.WriteLine(keyValuePair.Value.Item1);
-                keyValuePair.Value.Item2.ForEach(i => _extractedDataWriter.Write(i + " "));
+            foreach (var tuple in methodsTupleData) {
+                _extractedDataWriter.WriteLine("//" + tuple.Item1);
+                _extractedDataWriter.WriteLine(tuple.Item2.FullComment);
+                tuple.Item3.ForEach(i => _extractedDataWriter.Write(i + " "));
                 _extractedDataWriter.WriteLine();
+                tuple.Item4.ForEach(i => _extractedDataWriter.Write(i + " "));
             }
             _extractedDataWriter.Flush();
         }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using Common.Database;
 using SQLite;
 
@@ -7,7 +8,8 @@ namespace Roslyn_Extract_Methods.SlnProviders {
         private readonly SQLiteConnection _sqLiteConnection;
 
         public SlnProviderFromDatabase(string databaseName) {
-            _sqLiteConnection = new SQLiteConnection(databaseName);
+            _sqLiteConnection = new SQLiteConnection(databaseName) {BusyTimeout = TimeSpan.FromSeconds(60)};
+            _sqLiteConnection.CreateTable<Solution>();
         }
 
         public void Dispose() {
