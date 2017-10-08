@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.MSBuild;
 using NDesk.Options;
 using Roslyn_Extract_Methods.SlnProviders;
 using SQLite;
+using SQLiteNetExtensionsAsync.Extensions;
 using Solution = Microsoft.CodeAnalysis.Solution;
 
 namespace Roslyn_Extract_Methods {
@@ -29,7 +30,7 @@ namespace Roslyn_Extract_Methods {
                 string solutionPath) {
             Solution solution = BuildSolution(solutionPath);
             if (solution == null) {
-                return new List<Tuple<string, MethodCommentInfo, List<ApiCall>, List<MethodParameter>>>();
+                return null;
             }
             Console.WriteLine("Solution was build");
             var res = new List<Tuple<string, MethodCommentInfo, List<ApiCall>, List<MethodParameter>>>();
@@ -85,29 +86,30 @@ namespace Roslyn_Extract_Methods {
 
         private static readonly string FileProcessedSlnsCount = "sln_num.txt";
         private static readonly string LogFilePath = "exceptions.txt";
+        private static readonly string DatabasePath = "D:\\hubic\\mydb";
 
         private static void Main(string[] args) {
             
             if (!ParseArgs(args)) return;
 
-            var sqLiteConnection = new SQLiteAsyncConnection("D:\\hubic\\mydb");
-//            var solution = sqLiteConnection.Table<Common.Database.Solution>().Where(sln => sln.ProcessedTime != null).FirstAsync().Result;
+            var sqLiteConnection = new SQLiteAsyncConnection(DatabasePath);
+//            var solution = sqLiteConnection
+//                .GetAllWithChildrenAsync<Common.Database.Solution>(sln => sln.ProcessedTime != null).Result;
 //            return;
             var resultWriter =
                 new ResultWriters.ResultWriterToDatabase(sqLiteConnection); 
 //            new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
 //            using (var slnProvider = new SlnProviderFromFile(_pathToSlnFile, FileProcessedSlnsCount)) {
-            using (var slnProvider = new SlnProviderFromDatabase("D:\\hubic\\mydb")) {
+            using (var slnProvider = new SlnProviderFromDatabase(DatabasePath)) {
                 while (true) {
                     while (slnProvider.MoveNext()) {
                         var slnPath = slnProvider.Current;
                         RestorePackages(slnPath);
-                        var extractMethodsFromSolution = ExtractMethodsFromSolution(slnPath);
-                        var curSolution = slnProvider.GetCurSolution();
-//                        resultWriter.Write(extractMethodsFromSolution, slnPath);
-                        curSolution.ProcessedTime = DateTime.Now;
-                        var notAsync = sqLiteConnection.UpdateAsync(curSolution).Result;
-                        resultWriter.Write(extractMethodsFromSolution, slnPath, curSolution);
+                        var extractedMethodsFromSolution = ExtractMethodsFromSolution(slnPath);
+                        slnProvider.UpdateSolution(extractedMethodsFromSolution == null);
+                        if (extractedMethodsFromSolution != null) {
+                            resultWriter.Write(extractedMethodsFromSolution, slnPath, slnProvider.GetCurSolution());
+                        }
                     }
                     Console.WriteLine("...Waiting for 30 seconds...");
                     Thread.Sleep(30000); //download is slower than extraction.

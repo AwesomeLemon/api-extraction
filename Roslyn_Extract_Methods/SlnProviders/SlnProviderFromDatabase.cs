@@ -31,11 +31,19 @@ namespace Roslyn_Extract_Methods.SlnProviders {
         }
 
         public void Reset() {
-            throw new System.NotSupportedException();
+            throw new NotSupportedException();
         }
 
         public string Current { get; set;  }
 
         object IEnumerator.Current => Current;
+
+        public void UpdateSolution(bool couldNotCompile) {
+            _curSolution.ProcessedTime = DateTime.Now;
+            if (couldNotCompile) {
+                _curSolution.WasCompiled = false;
+            }
+            _sqLiteConnection.Update(_curSolution);
+        }
     }
 }

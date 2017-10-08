@@ -97,8 +97,8 @@ namespace DownloadRepositories {
         }
 
         private static void CloneRepository(string cloneUrl, string path) {
-            Console.WriteLine($"Cloning {cloneUrl} ...");
             if (Directory.Exists(path)) return;
+            Console.WriteLine($"Cloning {cloneUrl} ...");
             //Repository.Clone(cloneUrl, path);
             var process = new Process {
                 StartInfo = new ProcessStartInfo {

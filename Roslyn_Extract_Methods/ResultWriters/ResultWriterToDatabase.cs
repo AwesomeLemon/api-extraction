@@ -4,6 +4,7 @@ using System.Linq;
 using Common;
 using Common.Database;
 using SQLite;
+using SQLiteNetExtensionsAsync.Extensions;
 
 namespace Roslyn_Extract_Methods.ResultWriters {
     class ResultWriterToDatabase {
@@ -39,7 +40,7 @@ namespace Roslyn_Extract_Methods.ResultWriters {
             });
             curSolution.Methods = methodsInDatabase;
             curSolution.ProcessedTime = DateTime.Now;
-            _sqLiteConnection.UpdateAsync(curSolution);
+            _sqLiteConnection.UpdateWithChildrenAsync(curSolution);
         }
     }
 }
