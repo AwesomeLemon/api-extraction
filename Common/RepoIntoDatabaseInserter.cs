@@ -12,6 +12,11 @@ namespace Common {
             _sqLiteConnection.CreateTable<Repo>();
         }
 
+        public RepoIntoDatabaseInserter(SQLiteConnection connection) {
+            _sqLiteConnection = connection;
+            _sqLiteConnection.CreateTable<Repo>();
+        }
+
         public void InsertReposIntoDatabaseFromFile(string filePath) {
             int i = 0;
             _sqLiteConnection.RunInTransaction(() => {
@@ -37,10 +42,9 @@ namespace Common {
             var forks = sr.ReadLine();
             return new Repo(cloneUrl, Int32.Parse(stars), Int32.Parse(forks), Int32.Parse(watchers) );
         }
-        private static string _fileWithUrls = @"D:\DeepApiReps\again_reps_max.txt";
 
-        public static void Main(string[] args) {
+        /*public static void Main(string[] args) {
             new RepoIntoDatabaseInserter(@"D:\hubic\DeepApi#").InsertReposIntoDatabaseFromFile(_fileWithUrls);
-        }
+        }*/
     }
 }

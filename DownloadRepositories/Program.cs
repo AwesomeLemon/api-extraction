@@ -21,6 +21,7 @@ namespace DownloadRepositories {
         private static int _foldersToLeave = 500;
         private static bool _autoDeleteEnabled = true;
         private static string DatabasePath = @"D:\hubic\mydb";
+        private static string _fileWithUrls = @"D:\DeepApiReps\again_reps_max.txt";
 
         static void Main(string[] args) {
             var parsedArgsSuccessful = ParseArgs(args);
@@ -31,7 +32,7 @@ namespace DownloadRepositories {
 //            IRepoUrlProvider repoUrlProvider = new RepoUrlProviderFromFile(_fileWithUrls, toSkipNum);
             //            ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
             var sqLiteConnection = new SQLiteConnection(DatabasePath);
-            RepoUrlProviderFromDatabase repoUrlProvider = new RepoUrlProviderFromDatabase(sqLiteConnection);
+            RepoUrlProviderFromDatabase repoUrlProvider = new RepoUrlProviderFromDatabase(_fileWithUrls, sqLiteConnection);
             SlnWriterToDatabase slnWriter = new SlnWriterToDatabase(sqLiteConnection);
             
             var nextUrl = repoUrlProvider.GetNextUrl();
