@@ -1,5 +1,6 @@
 ﻿using System;
 using SQLite;
+using SQLiteNetExtensions.Attributes;
 
 namespace Common.Database {
     public class Method {
@@ -11,6 +12,8 @@ namespace Common.Database {
         public string ApiCalls { get; set; }
         public bool CommentIsXml { get; set; }
         public DateTime SampledAt { get; set; }
+        [ForeignKey(typeof(Solution))]
+        public int SolutionId { get; set; }
 
         public Method( string name, string apiCalls, MethodCommentInfo methodCommentInfo) {
             Name = name;
@@ -19,6 +22,10 @@ namespace Common.Database {
             ApiCalls = apiCalls;
             CommentIsXml = methodCommentInfo.IsXml;
             SampledAt = DateTime.Now;
+        }
+
+        public Method() {
+            
         }
     }
 }

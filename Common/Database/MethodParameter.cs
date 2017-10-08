@@ -14,5 +14,13 @@ namespace Common.Database {
             Type = type;
             Name = name;
         }
+
+        public MethodParameter() {
+            
+        }
+
+        public override string ToString() {
+            return "Method parameter (" + Type + " " + Name + ")";
+        }
     }
 }
