@@ -14,6 +14,7 @@ using Roslyn_Extract_Methods.SlnProviders;
 using SQLite;
 using SQLiteNetExtensionsAsync.Extensions;
 using Solution = Microsoft.CodeAnalysis.Solution;
+using System.Configuration;
 
 namespace Roslyn_Extract_Methods {
     internal class ProgramParseSolution {
@@ -81,23 +82,27 @@ namespace Roslyn_Extract_Methods {
             return solution;
         }
 
-        private static string _pathToSlnFile = @"D:\DeepApiReps\slns22.txt";
-        private static string _pathToExtractedDataFile = @"D:\DeepApiReps\res_3.txt";
+        private static string _pathToSlnFile = ConfigurationManager.AppSettings["pathToSlnFile"];
+        private static string _pathToExtractedDataFile = ConfigurationManager.AppSettings["pathToExtractedDataFile"];
 
-        private static readonly string FileProcessedSlnsCount = "sln_num.txt";
-        private static readonly string LogFilePath = "exceptions.txt";
-        private static readonly string DatabasePath = @"D:\hubic\DeepApi#";
+        private static readonly string FileProcessedSlnsCount = ConfigurationManager.AppSettings["fileProcessedSlnsCount"];
+        private static readonly string LogFilePath = ConfigurationManager.AppSettings["logFilePath"];
+        private static readonly string DatabasePath = ConfigurationManager.AppSettings["databasePath"];
 
         private static void Main(string[] args) {
             if (!ParseArgs(args)) return;
             var sqLiteConnection = new SQLiteAsyncConnection(DatabasePath);
-//            var testSln = "D:\\DeepApiReps\\jediwhale_fitsharp\\fitSharp.sln";
-//            RestorePackages(testSln);
-//            var extractedMethods = ExtractMethodsFromSolution(testSln);
+//            string configvalue1 = ConfigurationManager.AppSettings["key1"];
+//            Console.WriteLine(configvalue1);
+//            
 //            return;
-//            var solution = sqLiteConnection
-//                .GetAllWithChildrenAsync<Common.Database.Solution>(sln => sln.ProcessedTime != null).Result;
-//            return;
+            //            var testSln = "D:\\DeepApiReps\\jediwhale_fitsharp\\fitSharp.sln";
+            //            RestorePackages(testSln);
+            //            var extractedMethods = ExtractMethodsFromSolution(testSln);
+            //            return;
+            //            var solution = sqLiteConnection
+            //                .GetAllWithChildrenAsync<Common.Database.Solution>(sln => sln.ProcessedTime != null).Result;
+            //            return;
             var resultWriter =
                 new ResultWriters.ResultWriterToDatabase(sqLiteConnection);
 //            new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);

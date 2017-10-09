@@ -156,7 +156,9 @@
     <Compile Include="SlnProviders\ISlnProvider.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="..\app.config">
+      <Link>app.config</Link>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

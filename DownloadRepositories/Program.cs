@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -13,17 +14,20 @@ using SQLite;
 
 namespace DownloadRepositories {
     class Program {
-        private static string _pathForCloning = @"D:\DeepApiReps\";
-        private static string _pathToSlnFile = @"D:\DeepApiReps\slns2.txt";
+        private static string _pathForCloning = ConfigurationManager.AppSettings["pathForCloning"];
+        private static string _pathToSlnFile = ConfigurationManager.AppSettings["pathToSlnFile"];
 
-        private static readonly string FileProcessedRepsCount = "rep_num.txt";
-        private static readonly string logFilePath = "exceptions.txt";
-        private static int _foldersToLeave = 500;
-        private static bool _autoDeleteEnabled = true;
-        private static string DatabasePath = @"D:\hubic\DeepApi#";
-        private static string _fileWithUrls = @"D:\DeepApiReps\again_reps_max.txt";
+        private static readonly string FileProcessedRepsCount = ConfigurationManager.AppSettings["fileProcessedRepsCount"];
+        private static readonly string LogFilePath =  ConfigurationManager.AppSettings["logFilePath"];
+        private static int _foldersToLeave = Int32.Parse(ConfigurationManager.AppSettings["foldersToLeave"]);
+        private static bool _autoDeleteEnabled = Boolean.Parse(ConfigurationManager.AppSettings["autoDeleteEnabled"]);
+        private static string DatabasePath = ConfigurationManager.AppSettings["databasePath"];
+        private static string _fileWithUrls =ConfigurationManager.AppSettings["fileWithUrls"];
 
         static void Main(string[] args) {
+//            string configvalue1 = ConfigurationManager.AppSettings["key1"];
+//            Console.WriteLine(configvalue1);
+//            return;
             var parsedArgsSuccessful = ParseArgs(args);
             if (!parsedArgsSuccessful) return;
             if (_autoDeleteEnabled) {
@@ -54,7 +58,7 @@ namespace DownloadRepositories {
                         e is AggregateException ||
                         e is DirectoryNotFoundException) {
                         Console.WriteLine(e + "\n" + e.StackTrace);
-                        using (var logFile = new StreamWriter(logFilePath, true)) {
+                        using (var logFile = new StreamWriter(LogFilePath, true)) {
                             logFile.WriteLine(3 + "\n" + e);
                         }
                     }
