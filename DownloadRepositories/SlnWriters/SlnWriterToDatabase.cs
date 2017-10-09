@@ -8,7 +8,7 @@ namespace DownloadRepositories.SlnWriters {
         public void Write(IEnumerable<string> slns, int repoId) {
             _sqLiteConnection.InsertAll(slns.Select(slnPath => new Solution(repoId, slnPath)));
         }
-        
+
         private readonly SQLiteConnection _sqLiteConnection;
 
         public SlnWriterToDatabase(SQLiteConnection sqLiteConnection) {

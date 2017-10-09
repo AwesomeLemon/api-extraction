@@ -24,7 +24,7 @@ namespace DownloadRepositories.UrlProviders {
             var curRepUrlApi = _urlFileReader.ReadLine();
             return curRepUrlClone;
         }
-        
+
         private int _toSkipNum;
         private readonly string _fileProcessedRepsCount;
 
@@ -35,7 +35,7 @@ namespace DownloadRepositories.UrlProviders {
             }
             return _toSkipNum;
         }
-        
+
         public void Dispose() {
             using (var processedRepsFile = new StreamWriter(_fileProcessedRepsCount)) {
                 processedRepsFile.WriteLine(++_toSkipNum);

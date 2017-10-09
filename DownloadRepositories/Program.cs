@@ -29,12 +29,11 @@ namespace DownloadRepositories {
             if (_autoDeleteEnabled) {
                 StartPeriodicAutomaticDeletion();
             }
-//            IRepoUrlProvider repoUrlProvider = new RepoUrlProviderFromFile(_fileWithUrls, toSkipNum);
-            //            ISlnWriter slnWriter = new SlnWriterToFile(_pathToSlnFile);
             var sqLiteConnection = new SQLiteConnection(DatabasePath) {BusyTimeout = TimeSpan.FromSeconds(60)};
-            RepoUrlProviderFromDatabase repoUrlProvider = new RepoUrlProviderFromDatabase(_fileWithUrls, sqLiteConnection);
+            RepoUrlProviderFromDatabase repoUrlProvider =
+                new RepoUrlProviderFromDatabase(_fileWithUrls, sqLiteConnection);
             SlnWriterToDatabase slnWriter = new SlnWriterToDatabase(sqLiteConnection);
-            
+
             var nextUrl = repoUrlProvider.GetNextUrl();
             try {
                 while (nextUrl != null) {
@@ -46,7 +45,8 @@ namespace DownloadRepositories {
                         CloneRepository(curRepUrlClone, repPath);
 
                         Task.Factory.StartNew(() => {
-                            slnWriter.Write(Directory.EnumerateFiles(repPath, "*.sln", SearchOption.AllDirectories), repoUrlProvider.GetCurRepoId());
+                            slnWriter.Write(Directory.EnumerateFiles(repPath, "*.sln", SearchOption.AllDirectories),
+                                repoUrlProvider.GetCurRepoId());
                         });
                     }
                     catch (Exception e) when (
@@ -66,7 +66,6 @@ namespace DownloadRepositories {
             }
         }
 
-        
 
         private static bool ParseArgs(string[] args) {
             var p = new OptionSet() {
@@ -140,7 +139,8 @@ namespace DownloadRepositories {
             process.WaitForExit();
         }
 
-        public static string ExtractNameAndOwnerFromUrl(string url = "https://api.github.com/repos/kizzx2/cmd-recycle") {
+        public static string
+            ExtractNameAndOwnerFromUrl(string url = "https://api.github.com/repos/kizzx2/cmd-recycle") {
             var lastSlash = url.LastIndexOf('/');
             var secondToLastSlach = url.LastIndexOf('/', lastSlash - 1);
             var ownerNameAndDotGit = url.Substring(secondToLastSlach + 1);

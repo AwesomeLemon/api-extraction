@@ -14,10 +14,10 @@ namespace Roslyn_Extract_Methods.SlnProviders {
             int skippedCnt = 0;
             _processedNum = GetAlreadyProcessedNum();
             while (skippedCnt++ < _processedNum) {
-                Current = _slnFileReader.ReadLine();//not 'MoveNext', 'cause the processed counter is updated there
+                Current = _slnFileReader.ReadLine(); //not 'MoveNext', 'cause the processed counter is updated there
             }
         }
-        
+
         private int GetAlreadyProcessedNum() {
             int processedNum;
             if (!File.Exists(_fileProcessedSlnsCount)) File.Create(_fileProcessedSlnsCount).Close();

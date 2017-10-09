@@ -19,22 +19,21 @@ namespace DownloadRepositories.UrlProviders {
         public int GetCurRepoId() {
             return _curRepo.Id;
         }
+
         private readonly SQLiteConnection _sqLiteConnection;
 
         public RepoUrlProviderFromDatabase(string fileWithUrls, SQLiteConnection sqLiteConnection) {
             _sqLiteConnection = sqLiteConnection;
             var repoQuery = "SELECT count(tbl_name) FROM sqlite_master WHERE type='table' AND name='Repo';";
-            var count = _sqLiteConnection.ExecuteScalar<int>( repoQuery );
+            var count = _sqLiteConnection.ExecuteScalar<int>(repoQuery);
             bool repoTableExists = count == 1;
             if (!repoTableExists) {
                 new RepoIntoDatabaseInserter(_sqLiteConnection).InsertReposIntoDatabaseFromFile(fileWithUrls);
             }
-            
         }
-        
+
         public void Dispose() {
             _sqLiteConnection.Dispose();
         }
-
     }
 }

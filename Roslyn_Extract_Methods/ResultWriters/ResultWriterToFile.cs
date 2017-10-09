@@ -6,8 +6,8 @@ using Common.Database;
 
 namespace Roslyn_Extract_Methods.ResultWriters {
     class ResultWriterToFile : IResultWriter {
-        private readonly StreamWriter _extractedDataWriter; 
-        
+        private readonly StreamWriter _extractedDataWriter;
+
         public ResultWriterToFile(string resFilePath) {
             _extractedDataWriter = new StreamWriter(resFilePath, true);
             _extractedDataWriter.AutoFlush = true;

@@ -4,7 +4,7 @@ using Common.Database;
 using SQLite;
 
 namespace Roslyn_Extract_Methods.SlnProviders {
-    public class SlnProviderFromDatabase : ISlnProvider{
+    public class SlnProviderFromDatabase : ISlnProvider {
         private readonly SQLiteConnection _sqLiteConnection;
 
         public SlnProviderFromDatabase(string databaseName) {
@@ -34,7 +34,7 @@ namespace Roslyn_Extract_Methods.SlnProviders {
             throw new NotSupportedException();
         }
 
-        public string Current { get; set;  }
+        public string Current { get; set; }
 
         object IEnumerator.Current => Current;
 

@@ -12,8 +12,8 @@ namespace Roslyn_Extract_Methods.ResultWriters {
 
         public ResultWriterToDatabase(SQLiteAsyncConnection sqLiteConnection) {
             _sqLiteConnection = sqLiteConnection;
-            _sqLiteConnection.CreateTableAsync<Method>();
-            _sqLiteConnection.CreateTableAsync<MethodParameter>();
+            var notAsync = _sqLiteConnection.CreateTableAsync<Method>().Result;
+            notAsync = _sqLiteConnection.CreateTableAsync<MethodParameter>().Result;
         }
 
         public void Write(
@@ -35,8 +35,6 @@ namespace Roslyn_Extract_Methods.ResultWriters {
                     }
                     transaction.InsertAll(methodParameters);
                 }
-            }).ContinueWith(t => {
-                Console.WriteLine("done!");
             });
             curSolution.Methods = methodsInDatabase;
             curSolution.ProcessedTime = DateTime.Now;

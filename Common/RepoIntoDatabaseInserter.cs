@@ -5,7 +5,7 @@ using SQLite;
 
 namespace Common {
     public class RepoIntoDatabaseInserter {
-        private  SQLiteConnection _sqLiteConnection;
+        private SQLiteConnection _sqLiteConnection;
 
         public RepoIntoDatabaseInserter(string databasePath) {
             _sqLiteConnection = new SQLiteConnection(databasePath);
@@ -42,7 +42,7 @@ namespace Common {
             var stars = sr.ReadLine();
             var watchers = sr.ReadLine();
             var forks = sr.ReadLine();
-            return new Repo(cloneUrl, Int32.Parse(stars), Int32.Parse(forks), Int32.Parse(watchers) );
+            return new Repo(cloneUrl, Int32.Parse(stars), Int32.Parse(forks), Int32.Parse(watchers));
         }
 
         /*public static void Main(string[] args) {

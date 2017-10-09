@@ -89,15 +89,17 @@ namespace Roslyn_Extract_Methods {
         private static readonly string DatabasePath = @"D:\hubic\DeepApi#";
 
         private static void Main(string[] args) {
-            
             if (!ParseArgs(args)) return;
-
             var sqLiteConnection = new SQLiteAsyncConnection(DatabasePath);
+//            var testSln = "D:\\DeepApiReps\\jediwhale_fitsharp\\fitSharp.sln";
+//            RestorePackages(testSln);
+//            var extractedMethods = ExtractMethodsFromSolution(testSln);
+//            return;
 //            var solution = sqLiteConnection
 //                .GetAllWithChildrenAsync<Common.Database.Solution>(sln => sln.ProcessedTime != null).Result;
 //            return;
             var resultWriter =
-                new ResultWriters.ResultWriterToDatabase(sqLiteConnection); 
+                new ResultWriters.ResultWriterToDatabase(sqLiteConnection);
 //            new ResultWriters.ResultWriterToFile(_pathToExtractedDataFile);
 //            using (var slnProvider = new SlnProviderFromFile(_pathToSlnFile, FileProcessedSlnsCount)) {
             using (var slnProvider = new SlnProviderFromDatabase(DatabasePath)) {

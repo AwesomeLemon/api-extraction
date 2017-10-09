@@ -19,7 +19,7 @@ namespace Roslyn_Extract_Methods {
 
         public string GetFullMethodName(MethodDeclarationSyntax methodNode) {
             var declaredSymbol = _model.GetDeclaredSymbol(methodNode);
-            return declaredSymbol.ContainingSymbol.ToDisplayString() + "." + methodNode.Identifier.ToString();
+            return declaredSymbol.ContainingSymbol.ToDisplayString() + "." + methodNode.Identifier;
         }
 
         public override void VisitParameter(ParameterSyntax node) {
@@ -137,14 +137,13 @@ namespace Roslyn_Extract_Methods {
             if (node.Expression is IdentifierNameSyntax) {
                 // The target is a simple identifier, the code being analysed is of the form
                 // "command.ExecuteReader()" and memberAccess.Expression is the "command"
-                // node
                 var variable = (IdentifierNameSyntax) node.Expression;
                 var variableTypeSymbol = _model.GetTypeInfo(variable).Type;
                 var variableType = GetProperTypeName(variableTypeSymbol);
-                
-                if (variableTypeSymbol == null || variableType == null) return; //throw new ArgumentNullException(nameof(method));
-                Calls.Add(ApiCall.OfMethodInvocation(variableType, method.Name));
-                UpdateLastCalledMethod(method);
+
+                if (variableTypeSymbol == null || variableType == null)
+                    return; //throw new ArgumentNullException(nameof(method));
+                AddCallAndUpdateLastCalled(variableTypeSymbol, method);
                 return;
             }
             if (node.Expression is InvocationExpressionSyntax) {
@@ -162,10 +161,9 @@ namespace Roslyn_Extract_Methods {
             if (node.Expression is LiteralExpressionSyntax) {
                 var literalSyntax = (LiteralExpressionSyntax) node.Expression;
                 var literalType = _model.GetTypeInfo(literalSyntax).Type;
-                
+
                 if (literalType == null) return;
-                Calls.Add(ApiCall.OfMethodInvocation(GetProperTypeName(literalType), method.Name));
-                UpdateLastCalledMethod(method);
+                AddCallAndUpdateLastCalled(literalType, method);
                 return;
             }
             if (node.Expression is PredefinedTypeSyntax) {
@@ -184,7 +182,7 @@ namespace Roslyn_Extract_Methods {
                     type = _lastCalledMethodReturnType;
                 }
                 else type = GetProperTypeName(tryType.Type);
-                
+
                 Calls.Add(ApiCall.OfMethodInvocation(type, method.Name));
                 UpdateLastCalledMethod(method);
                 return;
@@ -205,10 +203,9 @@ namespace Roslyn_Extract_Methods {
             if (node.Expression is InstanceExpressionSyntax) {
                 var instSyntax = (InstanceExpressionSyntax) node.Expression;
                 var type = _model.GetTypeInfo(instSyntax).Type;
-                
+
                 if (type == null) return;
-                Calls.Add(ApiCall.OfMethodInvocation(GetProperTypeName(type), method.Name));
-                UpdateLastCalledMethod(method);
+                AddCallAndUpdateLastCalled(type, method);
                 return;
             }
             if (node.Expression is ParenthesizedExpressionSyntax) {
@@ -216,7 +213,7 @@ namespace Roslyn_Extract_Methods {
                 parenSyntax.Expression.Accept(this);
                 //TODO: danger with last called method
                 var type = _lastCalledMethodReturnType;
-                
+
                 Calls.Add(ApiCall.OfMethodInvocation(type, method.Name));
                 UpdateLastCalledMethod(method);
                 return;
@@ -224,10 +221,9 @@ namespace Roslyn_Extract_Methods {
             if (node.Expression is TypeOfExpressionSyntax) {
                 var typeofSyntax = (TypeOfExpressionSyntax) node.Expression;
                 var type = _model.GetTypeInfo(typeofSyntax.Type).Type;
-                
+
                 if (type == null) return;
-                Calls.Add(ApiCall.OfMethodInvocation(GetProperTypeName(type), method.Name));
-                UpdateLastCalledMethod(method);
+                AddCallAndUpdateLastCalled(type, method);
                 return;
             }
 //            if (node.Expression is ElementAccessExpressionSyntax) {
@@ -238,17 +234,21 @@ namespace Roslyn_Extract_Methods {
 //                updateLastCalledMethod(method);
 //                return;
 //            }
-            if (node.Expression is ElementAccessExpressionSyntax) return;//not interested.
+            if (node.Expression is ElementAccessExpressionSyntax) return; //not interested.
             if (node.Expression is GenericNameSyntax) {
-                var genericSyntax = (GenericNameSyntax)node.Expression;
+                var genericSyntax = (GenericNameSyntax) node.Expression;
                 var type = _model.GetTypeInfo(genericSyntax).Type;
-                
+
                 if (type == null) return;
-                Calls.Add(ApiCall.OfMethodInvocation(GetProperTypeName(type), method.Name));
-                UpdateLastCalledMethod(method);
+                AddCallAndUpdateLastCalled(type, method);
                 return;
             }
             Console.WriteLine("Missed something!");
+        }
+
+        private void AddCallAndUpdateLastCalled(ITypeSymbol type, ISymbol method) {
+            Calls.Add(ApiCall.OfMethodInvocation(GetProperTypeName(type), method.Name));
+            UpdateLastCalledMethod(method);
         }
     }
 }

@@ -3,8 +3,8 @@ using System.IO;
 
 namespace DownloadRepositories.SlnWriters {
     public class SlnWriterToFile {
-        private readonly StreamWriter _slnFileWriter; 
-        
+        private readonly StreamWriter _slnFileWriter;
+
         public SlnWriterToFile(string slnFilePath) {
             var slnFile = File.Open(slnFilePath, FileMode.Append, FileAccess.Write, FileShare.Read);
             _slnFileWriter = new StreamWriter(slnFile);
